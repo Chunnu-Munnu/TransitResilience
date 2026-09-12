@@ -12,8 +12,31 @@ export default function SimulationControls() {
   const [rainfall, setRainfall] = useState(5);
   const [lineId, setLineId] = useState("central_main");
   const [resetting, setResetting] = useState(false);
+  const [injecting, setInjecting] = useState(false);
   const [flash, setFlash] = useState(null);
   const selectedLine = LINES.find((l) => l.id === lineId) || LINES[0];
+
+  async function handleInjectRainfall() {
+    setInjecting(true);
+    setFlash(null);
+    try {
+      await runWhatIf(rainfall, lineId);
+      const isDisrupted = rainfall >= 64.5;
+      setFlash({
+        ok: true,
+        text: `Rainfall anomaly set to ${rainfall} mm on ${selectedLine.name}. ${
+          isDisrupted
+            ? "Heavy rainfall threshold (64.5 mm) crossed — risk predictions active on that line."
+            : "Intensity is below heavy disruption threshold (64.5 mm)."
+        }`,
+      });
+    } catch (e) {
+      setFlash({ ok: false, text: e.message || "Failed to inject rainfall anomaly." });
+    } finally {
+      setInjecting(false);
+      setTimeout(() => setFlash(null), 6000);
+    }
+  }
 
   async function resetAll() {
     setResetting(true);
@@ -62,8 +85,8 @@ export default function SimulationControls() {
         Disruption threshold is <b>64.5 mm</b> — IMD's official "heavy rainfall" band. Rain is local to the line
         you pick above; it won't put other lines at risk.
       </div>
-      <button className="btn-primary full" onClick={() => runWhatIf(rainfall, lineId)}>
-        Inject Rainfall on {selectedLine.name}
+      <button className="btn-primary full" disabled={injecting} onClick={handleInjectRainfall}>
+        {injecting ? "Injecting…" : `Inject Rainfall on ${selectedLine.name}`}
       </button>
 
       <button className="btn-secondary full" style={{ marginTop: 8 }} disabled={resetting} onClick={resetAll}>

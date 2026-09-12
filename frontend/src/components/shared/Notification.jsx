@@ -1,9 +1,16 @@
+import Loader from "./Loader";
+
 // Section 38: connection error states.
 export default function Notification({ connectionStatus, lastUpdateClock }) {
   if (connectionStatus === "open") return null;
 
-  if (connectionStatus === "connecting") {
-    return <div className="notif notif-info">Unable to connect to operations server. Retrying…</div>;
+  if (connectionStatus === "connecting" || connectionStatus === "reconnecting") {
+    return (
+      <div className="notif notif-info" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <Loader size={20} />
+        <span>Unable to connect to operations server. Retrying…</span>
+      </div>
+    );
   }
 
   return (

@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { loadStations } from "../map/mapGeo";
 import { formatClock12, tripTiming } from "../../utils/eta";
+import { api } from "../../services/api";
+import Input from "../shared/Input";
+
+/*
+ * TEMPORARY: exact train-ID lookup only, using GET /api/trains/{id}.
+ * Replace with GET /api/trains/search?q= once available.
+ * This does not support partial/fuzzy matching or origin/destination text search.
+ */
 
 // The five simulated lines. central_main stays the default so the existing
 // demo flow (pick origin/destination, no line question) isn't disrupted.
@@ -14,9 +22,9 @@ export const LINES = [
   { id: "western", name: "Western Line (Churchgate ↔ Virar)", color: "#EC4899" },
 ];
 
-// Three steps: which line, then which origin/destination on it, then which
-// train. Line comes first because origin/destination codes only make sense
-// once we know which line's station list to search.
+// Four steps: a quick-jump (favorites/recents/exact train ID) or the line
+// question first (origin/destination codes only make sense once we know
+// which line's station list to search), then origin/destination, then train.
 export default function TrainPickerModal({
   trains, hazards, clockMin, onConfirm, onCancel,
   initialLineId, initialOrigin, initialDestination, initialStep = 1, title, subtitle,
@@ -26,6 +34,27 @@ export default function TrainPickerModal({
   const [origin, setOrigin] = useState(initialOrigin || "");
   const [destination, setDestination] = useState(initialDestination || "");
   const [step, setStep] = useState(initialStep);
+  const [trainIdQuery, setTrainIdQuery] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState(null);
+
+  const [recents, setRecents] = useState(() => {
+    try {
+      const saved = localStorage.getItem("tr_recent_trips");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem("tr_favorite_trips");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => { loadStations().then(setAllStations); }, []);
 
@@ -45,14 +74,39 @@ export default function TrainPickerModal({
   const lineTrains = useMemo(() => trains.filter((t) => t.line_id === lineId), [trains, lineId]);
   const lineSegmentCount = useMemo(() => hazards.filter((h) => h.line_id === lineId).length, [hazards, lineId]);
 
+  /*
+   * TEMPORARY: exact train-ID lookup only, using GET /api/trains/{id}.
+   * Replace with GET /api/trains/search?q= once available - see interim search requirement.
+   * This does not support partial/fuzzy matching or origin/destination text search.
+   */
+  async function handleExactTrainIdSearch(e) {
+    if (e) e.preventDefault();
+    const query = trainIdQuery.trim().toUpperCase();
+    if (!query) return;
+
+    setSearchLoading(true);
+    setSearchError(null);
+
+    try {
+      const train = await api.getTrain(query);
+      if (train && train.id) {
+        onConfirm(train.id, train.terminus_station, train.departure_station, train.line_id);
+      } else {
+        setSearchError(`No train found with ID '${query}'. Try searching by station below.`);
+      }
+    } catch {
+      setSearchError(`No train found with ID '${query}'. Try searching by station below.`);
+    } finally {
+      setSearchLoading(false);
+    }
+  }
+
   const originStation = stations.find((s) => s.code === origin);
   const destStation = stations.find((s) => s.code === destination);
   const segmentCount = lineSegmentCount || Math.max(stations.length - 1, 1);
   const sameStation = origin === destination;
   const wrongDirection = originStation && destStation && destStation.order <= originStation.order;
 
-  // Show the next usable run for every service. If a train has already passed
-  // the boarding station, quote its next loop instead of hiding the service.
   const options = useMemo(() => {
     if (!originStation || !destStation) return [];
     return lineTrains
@@ -69,8 +123,78 @@ export default function TrainPickerModal({
       <div className="modal-card picker-card">
         {step === 1 && (
           <>
-            <h2 style={{ marginBottom: 4 }}>Which line are you travelling on?</h2>
-            <p className="muted" style={{ marginBottom: 16 }}>
+            <h2 style={{ marginBottom: 4 }}>Find Your Journey</h2>
+            <p className="muted" style={{ marginBottom: 18 }}>
+              Enter an exact train ID, jump back into a saved trip, or pick your line below.
+            </p>
+
+            {/* Favorites & Recents Quick Select -- these skip straight to a
+                specific train, so they carry their own saved lineId rather
+                than going through the line/origin/destination steps at all. */}
+            {(favorites.length > 0 || recents.length > 0) && (
+              <div style={{ marginBottom: "16px" }}>
+                <div className="field-label" style={{ marginBottom: "6px" }}>Past & Favorite Journeys</div>
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  {favorites.map((f, i) => (
+                    <button
+                      key={`fav-${i}`}
+                      type="button"
+                      className="picker-option"
+                      style={{ padding: "6px 10px", borderRadius: "16px", fontSize: "0.78rem", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                      onClick={() => onConfirm(f.trainId, f.destination, f.origin, f.lineId || "central_main")}
+                    >
+                      <span style={{ color: "#EAB308" }}>★</span>
+                      <b>{f.trainId}</b> ({f.origin} → {f.destination})
+                    </button>
+                  ))}
+                  {recents.map((r, i) => (
+                    <button
+                      key={`rec-${i}`}
+                      type="button"
+                      className="picker-option"
+                      style={{ padding: "6px 10px", borderRadius: "16px", fontSize: "0.78rem", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                      onClick={() => onConfirm(r.trainId, r.destination, r.origin, r.lineId || "central_main")}
+                    >
+                      <span>🕒</span>
+                      <b>{r.trainId}</b> ({r.origin} → {r.destination})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Exact Train ID Search Form */}
+            <form onSubmit={handleExactTrainIdSearch} style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "18px" }}>
+              <Input
+                id="exact-train-id-search"
+                label="Enter exact train number"
+                placeholder="e.g. T101"
+                value={trainIdQuery}
+                onChange={(e) => {
+                  setTrainIdQuery(e.target.value);
+                  if (searchError) setSearchError(null);
+                }}
+                disabled={searchLoading}
+              />
+              <button
+                type="submit"
+                className="btn-primary full"
+                disabled={searchLoading || !trainIdQuery.trim()}
+              >
+                {searchLoading ? "Finding Train…" : "Find Train"}
+              </button>
+              {searchError && (
+                <div className="picker-warn" style={{ color: "var(--red, #D64545)", margin: "4px 0 0 0", fontSize: "0.78rem" }}>
+                  {searchError}
+                </div>
+              )}
+            </form>
+
+            <div className="login-divider" style={{ margin: "18px 0" }}>
+              <span>or pick your line</span>
+            </div>
+
+            <p className="muted" style={{ marginBottom: 12 }}>
               We simulate all five lines live -- pick yours to see its trains and stations.
             </p>
 
@@ -131,7 +255,7 @@ export default function TrainPickerModal({
               disabled={sameStation || wrongDirection}
               onClick={() => setStep(3)}
             >
-              Find my train
+              Find trains for this route →
             </button>
           </>
         )}
