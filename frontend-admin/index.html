@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TransitResilience — Operations Console</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{
+  --bg:#0A121F; --header:#0E1B30; --surface:#111C31; --surface2:#16233D; --surface3:#1C2C4A;
+  --border:#243657; --ink:#E7ECF7; --ink-soft:#8FA0BC; --ink-dim:#5E7093;
+  --blue:#3E7BFA; --blue-soft:#132A52;
+  --green:#34C77B; --green-soft:#123324;
+  --amber:#F0B94C; --amber-soft:#3A2C10;
+  --red:#F16565; --red-soft:#3A1414;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+
+/* ---- header ---- */
+header{background:var(--header);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;height:60px;gap:28px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--blue),#7AA6FF);flex-shrink:0;}
+.brand .name{font-weight:700;font-size:0.95rem;line-height:1.1;}
+.brand .sub{font-size:0.68rem;color:var(--ink-soft);}
+nav{display:flex;gap:22px;flex:1;}
+nav a{color:var(--ink-soft);text-decoration:none;font-size:0.85rem;font-weight:500;padding:8px 0;border-bottom:2px solid transparent;cursor:pointer;}
+nav a.active{color:var(--ink);border-color:var(--blue);}
+.header-right{display:flex;align-items:center;gap:14px;}
+.sim-status{display:flex;align-items:center;gap:7px;font-size:0.78rem;color:var(--ink-soft);}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-soft);}
+.dot.paused{background:var(--amber);box-shadow:0 0 0 3px var(--amber-soft);}
+.clock{font-size:0.8rem;color:var(--ink-soft);}
+.btn-end{background:var(--red-soft);color:var(--red);border:1px solid #5A2323;padding:7px 14px;border-radius:7px;font-size:0.78rem;font-weight:600;cursor:pointer;}
+
+/* ---- layout ---- */
+.layout{display:grid;grid-template-columns:260px 1fr 340px;gap:14px;padding:14px;height:calc(100vh - 60px - 54px);}
+.col{display:flex;flex-direction:column;gap:14px;overflow-y:auto;min-height:0;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.card h2{font-size:0.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-soft);margin:0 0 12px;font-weight:600;}
+
+/* stat tiles */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.stat-tile{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 12px;}
+.stat-tile .n{font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums;}
+.stat-tile .l{font-size:0.68rem;color:var(--ink-soft);margin-top:2px;}
+.stat-tile.warn .n{color:var(--amber);}
+.stat-tile.risk .n{color:var(--red);}
+
+/* events / list rows */
+.event-row{display:flex;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);}
+.event-row:last-child{border-bottom:none;}
+.event-icon{width:20px;height:20px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.7rem;margin-top:1px;}
+.event-icon.high{background:var(--red-soft);color:var(--red);}
+.event-icon.mid{background:var(--amber-soft);color:var(--amber);}
+.event-title{font-size:0.8rem;font-weight:600;}
+.event-sub{font-size:0.72rem;color:var(--ink-soft);margin-top:1px;}
+.event-time{font-size:0.68rem;color:var(--ink-dim);margin-left:auto;white-space:nowrap;}
+
+.train-row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--border);font-size:0.8rem;cursor:pointer;}
+.train-row:last-child{border-bottom:none;}
+.train-row:hover{background:var(--surface2);}
+.train-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.train-dot.on_time{background:var(--green);}
+.train-dot.delayed{background:var(--amber);}
+.train-dot.at_risk{background:var(--red);}
+.train-meta{flex:1;min-width:0;}
+.train-meta .id{font-weight:600;}
+.train-meta .route{color:var(--ink-soft);font-size:0.72rem;}
+.pill{font-size:0.66rem;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap;}
+.pill.on_time{background:var(--green-soft);color:var(--green);}
+.pill.delayed{background:var(--amber-soft);color:var(--amber);}
+.pill.at_risk{background:var(--red-soft);color:var(--red);}
+
+/* map */
+#map{border-radius:12px;border:1px solid var(--border);height:100%;background:#0B1220;}
+.legend{position:absolute;bottom:14px;right:14px;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 12px;font-size:0.7rem;color:var(--ink-soft);z-index:1000;}
+.legend div{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
+.legend div:last-child{margin-bottom:0;}
+.legend .sw{width:14px;height:3px;border-radius:2px;}
+.map-wrap{position:relative;height:100%;}
+
+/* anomaly controls */
+.slider-row label{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--ink-soft);margin-bottom:6px;}
+input[type=range]{width:100%;accent-color:var(--blue);}
+select,input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--ink);font-size:0.8rem;margin-bottom:8px;}
+.btn{width:100%;padding:9px;border-radius:8px;border:none;font-weight:600;font-size:0.8rem;cursor:pointer;}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-secondary{background:var(--surface3);color:var(--ink);}
+
+/* AI recommendation card */
+.reco-card{border:1px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden;}
+.reco-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.reco-head h2{margin:0;font-size:0.72rem;}
+.reco-body{padding:16px;}
+.reco-title{font-size:0.95rem;font-weight:600;margin-bottom:4px;}
+.reco-tier{font-size:0.68rem;color:var(--ink-soft);margin-bottom:14px;}
+.reco-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.reco-metric .n{font-size:1.1rem;font-weight:700;color:var(--green);}
+.reco-metric .l{font-size:0.68rem;color:var(--ink-soft);}
+.reco-actions{display:flex;gap:8px;}
+.reco-actions button{flex:1;padding:9px 0;border-radius:7px;border:none;font-weight:600;font-size:0.78rem;cursor:pointer;}
+.btn-approve{background:var(--green);color:#06170E;}
+.btn-adjust{background:var(--blue);color:#fff;}
+.btn-reject{background:var(--red-soft);color:var(--red);border:1px solid #5A2323 !important;}
+.reco-empty{padding:24px 16px;text-align:center;color:var(--ink-soft);font-size:0.82rem;}
+
+/* stepper */
+.stepper{display:flex;align-items:center;margin:14px 0 6px;overflow-x:auto;padding-bottom:4px;}
+.step{display:flex;flex-direction:column;align-items:center;min-width:64px;position:relative;}
+.step .node{width:11px;height:11px;border-radius:50%;background:var(--ink-dim);border:2px solid var(--bg);z-index:2;}
+.step.active .node{background:var(--blue);}
+.step .name{font-size:0.62rem;color:var(--ink-soft);margin-top:6px;white-space:nowrap;}
+.step .line{position:absolute;top:5px;left:50%;width:100%;height:2px;background:var(--border);z-index:1;}
+.step:first-child .line{display:none;}
+
+/* footer bar */
+footer{background:var(--header);border-top:1px solid var(--border);height:54px;display:flex;align-items:center;padding:0 20px;gap:24px;}
+.foot-stat{display:flex;flex-direction:column;}
+.foot-stat .n{font-size:0.95rem;font-weight:700;font-variant-numeric:tabular-nums;}
+.foot-stat .l{font-size:0.65rem;color:var(--ink-soft);}
+.scrubber{flex:1;display:flex;align-items:center;gap:10px;}
+.scrubber-track{flex:1;height:4px;background:var(--surface3);border-radius:2px;position:relative;}
+.scrubber-fill{position:absolute;left:0;top:0;height:100%;background:var(--blue);border-radius:2px;}
+.play-btn{width:30px;height:30px;border-radius:50%;background:var(--blue);border:none;color:#fff;cursor:pointer;font-size:0.75rem;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo"></div>
+    <div><div class="name">TransitResilience</div><div class="sub">Operations Console</div></div>
+  </div>
+  <nav>
+    <a class="active">Operations</a>
+    <a title="Not built in this pass">Scenario Control</a>
+    <a title="Not built in this pass">Reports</a>
+  </nav>
+  <div class="header-right">
+    <div class="sim-status"><span class="dot" id="simDot"></span><span id="simLabel">Simulation running</span></div>
+    <span class="clock mono" id="clock">--:--</span>
+    <button class="btn-end" id="toggleSimBtn">Pause Simulation</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <div class="col">
+    <div class="card">
+      <h2>Network Overview</h2>
+      <div class="stat-grid">
+        <div class="stat-tile"><div class="n" id="statActive">—</div><div class="l">Active Trains</div></div>
+        <div class="stat-tile risk"><div class="n" id="statAtRisk">—</div><div class="l">At Risk</div></div>
+        <div class="stat-tile warn"><div class="n" id="statDelayed">—</div><div class="l">Delayed</div></div>
+        <div class="stat-tile risk"><div class="n" id="statConflicts">—</div><div class="l">Platform Conflicts</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="flex:1;">
+      <h2>Active Events</h2>
+      <div id="eventsList"><p class="reco-empty">No active events.</p></div>
+    </div>
+
+    <div class="card">
+      <h2>Anomaly Injector</h2>
+      <div class="slider-row"><label>Rainfall <span id="rainVal" class="mono">5 mm</span></label></div>
+      <input type="range" id="rainSlider" min="0" max="150" value="5" />
+      <select id="incidentSegment"></select>
+      <input type="text" id="incidentText" placeholder="e.g. Waterlogging near Kurla" />
+      <button class="btn btn-secondary" id="injectIncidentBtn">Inject Incident</button>
+    </div>
+  </div>
+
+  <div class="col" style="overflow:visible;">
+    <div class="map-wrap" style="flex:1;">
+      <div id="map"></div>
+      <div class="legend">
+        <div><span class="sw" style="background:#54C7AF"></span>Normal track</div>
+        <div><span class="sw" style="background:#F0B94C"></span>Elevated risk</div>
+        <div><span class="sw" style="background:#F16565"></span>High risk</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="reco-card">
+      <div class="reco-head"><h2>AI Recommendation</h2></div>
+      <div class="reco-body" id="recoBody">
+        <p class="reco-empty">No pending plan. The optimizer proposes a candidate here the moment a predicted delay crosses threshold.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Train Details</h2>
+      <div id="trainDetail"><p class="reco-empty">Select a train to view its route.</p></div>
+    </div>
+
+    <div class="card" style="flex:1;">
+      <h2>Trains</h2>
+      <div id="trainList"></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="foot-stat"><span class="n mono" id="footPML">0</span><span class="l">Passenger-Minutes Lost</span></div>
+  <div class="foot-stat"><span class="n mono" id="footAffected">0</span><span class="l">Services Affected</span></div>
+  <div class="foot-stat"><span class="n mono" id="footConflicts">0</span><span class="l">Platform Conflicts</span></div>
+  <div class="foot-stat" style="color:var(--green);"><span class="n mono" id="footCO2">0 kg</span><span class="l">CO₂ Avoided</span></div>
+  <div class="scrubber">
+    <span class="mono" id="scrubStart" style="color:var(--ink-soft);font-size:0.72rem;">06:00</span>
+    <div class="scrubber-track"><div class="scrubber-fill" id="scrubFill"></div></div>
+    <span class="mono" id="scrubEnd" style="color:var(--ink-soft);font-size:0.72rem;">10:00</span>
+  </div>
+</footer>
+
+<script>
+const map = L.map('map', {zoomControl:true, attributionControl:false}).setView([19.08, 72.93], 11);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom:17}).addTo(map);
+
+let state = null, selectedTrainId = null;
+let segmentLines = {}, trainMarkers = {}, stationByCode = {};
+let footStats = {pml:0, affected:0, conflicts:0, co2:0};
+
+function riskColor(r){ return r >= 0.5 ? '#F16565' : r >= 0.2 ? '#F0B94C' : '#34C77B'; }
+
+function renderStatic(){
+  stationByCode = Object.fromEntries(state.stations.map(s => [s.code, s]));
+  state.stations.forEach(s => {
+    L.circleMarker([s.lat, s.lon], {radius:4, color:'#5E7093', fillColor:'#E7ECF7', fillOpacity:1, weight:1})
+      .bindTooltip(s.name).addTo(map);
+  });
+  document.getElementById('incidentSegment').innerHTML =
+    state.segments.map(seg => `<option value="${seg.id}">${seg.from} → ${seg.to}</option>`).join('');
+}
+
+function renderDynamic(){
+  const h = String(Math.floor(state.clock_min/60)%24).padStart(2,'0');
+  const m = String(state.clock_min%60).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}`;
+
+  const dot = document.getElementById('simDot'), label = document.getElementById('simLabel'), btn = document.getElementById('toggleSimBtn');
+  dot.className = 'dot' + (state.paused ? ' paused' : '');
+  label.textContent = state.paused ? 'Simulation paused' : 'Simulation running';
+  btn.textContent = state.paused ? 'Resume Simulation' : 'Pause Simulation';
+
+  const dayStart = 6*60, dayEnd = 10*60;
+  const frac = Math.max(0, Math.min(1, (state.clock_min - dayStart) / (dayEnd - dayStart)));
+  document.getElementById('scrubFill').style.width = (frac*100).toFixed(1) + '%';
+
+  state.segments.forEach(seg => {
+    const a = stationByCode[seg.from], b = stationByCode[seg.to];
+    const color = riskColor(seg.flood_risk);
+    if (segmentLines[seg.id]) segmentLines[seg.id].setStyle({color});
+    else segmentLines[seg.id] = L.polyline([[a.lat,a.lon],[b.lat,b.lon]], {color, weight:5, opacity:0.85}).addTo(map);
+    segmentLines[seg.id].bindTooltip(`${seg.from}-${seg.to}: risk ${(seg.flood_risk*100).toFixed(0)}%`);
+  });
+
+  let atRisk=0, delayed=0;
+  state.trains.forEach(t => {
+    if (t.status==='at_risk') atRisk++; else if (t.status==='delayed') delayed++;
+    const seg = state.segments[Math.min(t.current_segment_index, state.segments.length-1)];
+    const a = stationByCode[seg.from], b = stationByCode[seg.to];
+    const p = t.progress_in_segment;
+    const lat = a.lat+(b.lat-a.lat)*p, lon = a.lon+(b.lon-a.lon)*p;
+    const color = t.status==='at_risk'?'#F16565':t.status==='delayed'?'#F0B94C':'#34C77B';
+    if (trainMarkers[t.id]) { trainMarkers[t.id].setLatLng([lat,lon]); trainMarkers[t.id].setStyle({fillColor:color}); }
+    else trainMarkers[t.id] = L.circleMarker([lat,lon], {radius:7,color:'#0A121F',fillColor:color,fillOpacity:1,weight:1.5})
+      .addTo(map).on('click', () => selectTrain(t.id));
+    trainMarkers[t.id].bindTooltip(`${t.id} · ${t.status.replace('_',' ')} · +${t.delay_min}m`);
+  });
+
+  document.getElementById('statActive').textContent = state.trains.length;
+  document.getElementById('statAtRisk').textContent = atRisk;
+  document.getElementById('statDelayed').textContent = delayed;
+
+  document.getElementById('trainList').innerHTML = state.trains.map(t => `
+    <div class="train-row" onclick="selectTrain('${t.id}')">
+      <span class="train-dot ${t.status}"></span>
+      <div class="train-meta"><div class="id">${t.id}</div><div class="route">${t.departure_station} → ${t.terminus_station}</div></div>
+      <span class="pill ${t.status}">${t.status==='at_risk'?'At Risk':t.status==='delayed'?`+${t.delay_min}m`:'On Time'}</span>
+    </div>`).join('');
+
+  if (selectedTrainId) renderTrainDetail(selectedTrainId);
+}
+
+function selectTrain(id){ selectedTrainId = id; renderTrainDetail(id); loadCandidates(); }
+
+function renderTrainDetail(id){
+  const t = state.trains.find(x => x.id === id);
+  const box = document.getElementById('trainDetail');
+  if (!t) { box.innerHTML = '<p class="reco-empty">Select a train to view its route.</p>'; return; }
+  const idx = Math.min(t.current_segment_index, state.segments.length);
+  const upcoming = state.stations.slice(Math.max(0, idx-1), idx+4);
+  box.innerHTML = `
+    <div style="font-size:0.85rem;"><b>${t.id}</b> <span class="pill ${t.status}">${t.status.replace('_',' ')}</span></div>
+    <div style="color:var(--ink-soft);font-size:0.75rem;margin-top:2px;">${t.departure_station} → ${t.terminus_station} · +${t.delay_min} min</div>
+    <div class="stepper">
+      ${upcoming.map((s,i) => `<div class="step ${i===1?'active':''}"><div class="line"></div><div class="node"></div><div class="name">${s.code}</div></div>`).join('')}
+    </div>`;
+}
+
+let candidates = [];
+function loadCandidates(){
+  fetch('/api/candidates').then(r=>r.json()).then(data => { candidates = data; renderReco(); renderEvents(); });
+}
+
+function renderReco(){
+  const pending = candidates.filter(c => c.status === 'pending' && (!selectedTrainId || c.train_id === selectedTrainId));
+  const box = document.getElementById('recoBody');
+  if (!pending.length) {
+    const anyPending = candidates.filter(c => c.status === 'pending');
+    if (!anyPending.length) { box.innerHTML = '<p class="reco-empty">No pending plan. The optimizer proposes a candidate here the moment a predicted delay crosses threshold.</p>'; return; }
+    return renderRecoFor(anyPending[0]);
+  }
+  renderRecoFor(pending[0]);
+}
+
+function renderRecoFor(c){
+  const box = document.getElementById('recoBody');
+  const p = c.plan;
+  const busNote = p.buses_assigned.length ? `Diversion via ${p.buses_assigned.length} bus(es) (${p.ev_used} EV)` : 'Schedule hold only';
+  box.innerHTML = `
+    <div class="reco-title">${busNote} — ${c.train_id}</div>
+    <div class="reco-tier">${c.tier.toUpperCase()} TIER · severity ${(c.severity*100).toFixed(0)}%</div>
+    <div class="reco-metrics">
+      <div class="reco-metric"><div class="n">${Object.keys(p.hold_adjustments).length}</div><div class="l">Conflicts avoided</div></div>
+      <div class="reco-metric"><div class="n">${p.co2_avoided_kg} kg</div><div class="l">CO₂ avoided</div></div>
+    </div>
+    <div style="font-size:0.75rem;color:var(--ink-soft);white-space:pre-wrap;margin-bottom:14px;">${c.admin_explanation}</div>
+    <div class="reco-actions">
+      <button class="btn-approve" onclick="decide(${c.id}, true)">Approve</button>
+      <button class="btn-adjust" onclick="alert('Manual plan editing is on the roadmap — approving as proposed for now.')">Adjust</button>
+      <button class="btn-reject" onclick="decide(${c.id}, false)">Reject</button>
+    </div>`;
+}
+
+function renderEvents(){
+  const pending = candidates.filter(c => c.status === 'pending');
+  const box = document.getElementById('eventsList');
+  document.getElementById('statConflicts').textContent = pending.reduce((s,c)=>s+Object.keys(c.plan.hold_adjustments).length,0);
+  if (!pending.length) { box.innerHTML = '<p class="reco-empty">No active events.</p>'; return; }
+  box.innerHTML = pending.map(c => `
+    <div class="event-row">
+      <div class="event-icon ${c.tier==='senior'?'high':'mid'}">!</div>
+      <div><div class="event-title">${c.train_id} · segment ${c.affected_segment_id}</div><div class="event-sub">${c.tier} tier, severity ${(c.severity*100).toFixed(0)}%</div></div>
+    </div>`).join('');
+
+  footStats.pml = pending.reduce((s,c)=> s + Object.values(c.plan.hold_adjustments).reduce((a,b)=>a+b,0)*120, 0);
+  footStats.affected = pending.length;
+  footStats.conflicts = pending.reduce((s,c)=>s+Object.keys(c.plan.hold_adjustments).length,0);
+  footStats.co2 = pending.reduce((s,c)=>s+c.plan.co2_avoided_kg,0);
+  document.getElementById('footPML').textContent = footStats.pml.toLocaleString();
+  document.getElementById('footAffected').textContent = footStats.affected;
+  document.getElementById('footConflicts').textContent = footStats.conflicts;
+  document.getElementById('footCO2').textContent = footStats.co2.toFixed(1) + ' kg';
+}
+
+function decide(id, approve){
+  fetch(`/api/candidates/${id}/decision`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({approve, approver:'ops-admin'})})
+    .then(() => loadCandidates());
+}
+
+document.getElementById('rainSlider').addEventListener('input', e => document.getElementById('rainVal').textContent = e.target.value + ' mm');
+document.getElementById('rainSlider').addEventListener('change', e =>
+  fetch('/api/anomaly', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({rainfall_mm: parseFloat(e.target.value)})}));
+document.getElementById('injectIncidentBtn').addEventListener('click', () => {
+  const text = document.getElementById('incidentText').value || 'Reported disruption';
+  const segment_id = document.getElementById('incidentSegment').value;
+  fetch('/api/incident', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text, segment_id})});
+});
+document.getElementById('toggleSimBtn').addEventListener('click', () => fetch('/api/sim/toggle', {method:'POST'}));
+
+const ws = new WebSocket(`ws://${location.host}/ws/admin`);
+ws.onmessage = (ev) => {
+  const msg = JSON.parse(ev.data);
+  if (msg.type === 'sim_tick') { const first = state===null; state = msg; if (first) renderStatic(); renderDynamic(); }
+  else if (msg.type === 'candidate_created' || msg.type === 'plan_applied') loadCandidates();
+};
+loadCandidates();
+setInterval(loadCandidates, 4000);
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]: TransitResilience
+    - heading "We don't report delays. We predict them." [level=1] [ref=e8]: We don't report delays.We predict them.
+    - paragraph [ref=e9]: Hazard-aware operations for the Mumbai Central Line — predicting disruption before it happens, tracing it across the network, and proposing a plan a human signs off on.
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - generic [ref=e12]: "14"
+        - text: Real stations
+      - generic [ref=e13]:
+        - generic [ref=e14]: "12"
+        - text: Live services
+      - generic [ref=e15]:
+        - generic [ref=e16]: 10 yr
+        - text: Rainfall data
+    - generic [ref=e17]:
+      - generic [ref=e18]: Predict→
+      - generic [ref=e19]: Propagate→
+      - generic [ref=e20]: Optimize→
+      - generic [ref=e21]: Approve→
+      - generic [ref=e22]: Notify
+  - generic [ref=e24]:
+    - heading "Sign in" [level=2] [ref=e25]
+    - paragraph [ref=e26]: Choose the view you want to open.
+    - generic [ref=e27]: Username
+    - textbox "Username" [ref=e28]: user
+    - generic [ref=e29]: Password
+    - textbox "Password" [ref=e30]: user
+    - button "Sign In" [ref=e31] [cursor=pointer]
+    - generic [ref=e32]: or open a demo account
+    - generic [ref=e34]:
+      - button "Passenger Track one journey, get live reroute alerts user / user" [active] [ref=e35] [cursor=pointer]:
+        - generic [ref=e36]: Passenger
+        - generic [ref=e37]: Track one journey, get live reroute alerts
+        - generic [ref=e38]: user / user
+      - button "Operator Full control room — approve or reject AI plans admin / admin" [ref=e39] [cursor=pointer]:
+        - generic [ref=e40]: Operator
+        - generic [ref=e41]: Full control room — approve or reject AI plans
+        - generic [ref=e42]: admin / admin
+    - paragraph [ref=e43]: Demo credentials only — this is role selection for a prototype, not real authentication.

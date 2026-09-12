@@ -1,0 +1,19 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "properties": { "code": "CSTM", "name": "Mumbai CST", "order": 1 }, "geometry": { "type": "Point", "coordinates": [72.836903, 18.944481] } },
+    { "type": "Feature", "properties": { "code": "BY", "name": "Byculla", "order": 2 }, "geometry": { "type": "Point", "coordinates": [72.833211, 18.976950] } },
+    { "type": "Feature", "properties": { "code": "DR", "name": "Dadar", "order": 3 }, "geometry": { "type": "Point", "coordinates": [72.842972, 19.017179] } },
+    { "type": "Feature", "properties": { "code": "CLA", "name": "Kurla", "order": 4 }, "geometry": { "type": "Point", "coordinates": [72.879375, 19.065221] } },
+    { "type": "Feature", "properties": { "code": "GC", "name": "Ghatkopar", "order": 5 }, "geometry": { "type": "Point", "coordinates": [72.908591, 19.085985] } },
+    { "type": "Feature", "properties": { "code": "VK", "name": "Vikhroli", "order": 6 }, "geometry": { "type": "Point", "coordinates": [72.928312, 19.111960] } },
+    { "type": "Feature", "properties": { "code": "BND", "name": "Bhandup", "order": 7 }, "geometry": { "type": "Point", "coordinates": [72.937235, 19.142010] } },
+    { "type": "Feature", "properties": { "code": "NHU", "name": "Nahur", "order": 8 }, "geometry": { "type": "Point", "coordinates": [72.946683, 19.154646] } },
+    { "type": "Feature", "properties": { "code": "MLND", "name": "Mulund", "order": 9 }, "geometry": { "type": "Point", "coordinates": [72.956933, 19.172355] } },
+    { "type": "Feature", "properties": { "code": "TNA", "name": "Thane", "order": 10 }, "geometry": { "type": "Point", "coordinates": [72.975417, 19.185757] } },
+    { "type": "Feature", "properties": { "code": "MBQ", "name": "Mumbra", "order": 11 }, "geometry": { "type": "Point", "coordinates": [73.023260, 19.190223] } },
+    { "type": "Feature", "properties": { "code": "DIVA", "name": "Diva", "order": 12 }, "geometry": { "type": "Point", "coordinates": [73.041905, 19.188394] } },
+    { "type": "Feature", "properties": { "code": "DI", "name": "Dombivli", "order": 13 }, "geometry": { "type": "Point", "coordinates": [73.086900, 19.218218] } },
+    { "type": "Feature", "properties": { "code": "KYN", "name": "Kalyan Jn", "order": 14 }, "geometry": { "type": "Point", "coordinates": [73.129740, 19.234716] } }
+  ]
+}
