@@ -12,8 +12,10 @@ import FooterBar from "../components/admin/FooterBar";
 export default function ReviewQueuePage() {
   useOperationsSocket();
   const { state } = useOperations();
+  // Confidence-ordered: highest severity first, so the operator naturally
+  // works top-to-bottom through the most-certain, highest-impact calls.
   const pending = useMemo(
-    () => state.recommendations.filter((r) => r.status === "pending"),
+    () => [...state.recommendations].filter((r) => r.status === "pending").sort((a, b) => b.severity - a.severity),
     [state.recommendations]
   );
   const [selectedId, setSelectedId] = useState(null);
@@ -32,7 +34,8 @@ export default function ReviewQueuePage() {
       left={
         <div className="card review-queue-card">
           <h2>Review Queue</h2>
-          {!pending.length && <p className="empty">No plans are awaiting operator review.</p>}
+          {!pending.length && <p className="empty">No plans are awaiting operator review. When a predicted delay crosses threshold, it will appear here.</p>}
+          {pending.length > 0 && <p className="threshold-hint">Ordered by confidence (severity), highest first.</p>}
           <div className="review-list">
             {pending.map((r) => (
               <button
@@ -42,7 +45,7 @@ export default function ReviewQueuePage() {
               >
                 <span>
                   <b>{r.train_id}</b>
-                  <span className="muted"> · {r.affected_segment_id.replace("_", " → ")}</span>
+                  <span className="muted"> · {r.affected_segment_id.replace("_", " → ")} · {(r.severity * 100).toFixed(0)}%</span>
                 </span>
                 <span className={`tier-badge ${r.tier === "senior" ? "senior" : ""}`}>{r.tier}</span>
               </button>
@@ -63,7 +66,11 @@ export default function ReviewQueuePage() {
       }
       right={
         <>
-          <RecommendationPanel recommendation={selected} />
+          <RecommendationPanel
+            recommendation={selected}
+            queueTotal={pending.length}
+            nextUp={pending.find((r) => r.id !== selected?.id) || null}
+          />
           <PropagationGraph recommendation={selected} />
           <ImpactPanel metrics={state.metrics} />
         </>

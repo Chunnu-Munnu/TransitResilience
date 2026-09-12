@@ -135,14 +135,18 @@ ACTION_LABELS = {
 def explain_robust_decision(decision: RobustDecision) -> str:
     """Plain-English. No score jargon -- the numbers a person actually cares
     about are 'how late does this leave us' and 'does it still work if the
-    flood arrives early'."""
+    timing is off'. Deliberately says nothing flood-specific ("the water") --
+    the same robust-timing logic runs for a rain-driven prediction, a track
+    block from an accident, a fallen tree, or anything else, and the onset
+    estimate here is really "when the train reaches the disruption," not a
+    weather forecast."""
     chosen = decision.chosen
     runner_up = next((r for r in decision.all_results if r.action != chosen.action), None)
 
     lines = [
-        f"We don't know exactly when the water will hit - the forecast says {decision.onset_minutes:.0f} minutes, "
+        f"We don't know exactly when your train will reach it - the estimate is {decision.onset_minutes:.0f} minutes, "
         f"but it could be up to {ONSET_PERTURBATION_MIN} minutes earlier or later. So each option was replayed "
-        f"against {N_SCENARIOS} different arrival times.",
+        f"against {N_SCENARIOS} different timings.",
         "",
         f"CHOSEN: {ACTION_LABELS.get(chosen.action, chosen.action)}",
         f"  Leaves about {chosen.avg_delay_min:.0f} min of delay ({chosen.avg_passenger_minutes:,} passenger-minutes lost).",
@@ -161,7 +165,7 @@ def explain_robust_decision(decision: RobustDecision) -> str:
 
     lines += [
         "",
-        "We judge options by their WORST timing, not their average, so the plan still works if the water "
-        "arrives earlier than forecast.",
+        "We judge options by their WORST timing, not their average, so the plan still works if the "
+        "disruption's timing shifts earlier than expected.",
     ]
     return "\n".join(lines)

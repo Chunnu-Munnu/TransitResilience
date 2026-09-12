@@ -36,6 +36,25 @@ LOOKAHEAD_SEGMENTS = 3   # how far ahead a train "sees" hazards (the predict-bef
 RECOVERY_MIN_PER_TICK = 0.8   # delay a train works off per simulated minute once the hazard is behind it
 DEFAULT_BLOCK_DURATION_MIN = 45  # a closed segment reopens on its own after this, unless cleared manually
 TICK_SECONDS = 2.0
+# A blockage caused by a real-world incident (not routine maintenance) gets
+# reported to whichever authority actually owns that problem. Purely internal
+# causes (signal failure, technical, unspecified) stay an operator-only event.
+AUTHORITY_BY_CAUSE = {
+    "tree_fall": "Municipal Disaster Management Cell",
+    "accident": "Railway Protection Force",
+    "flooding": "State Disaster Management Authority",
+    "landslide": "State Disaster Management Authority",
+}
+SEVERITY_REROUTE_THRESHOLD = 0.5  # at/above this, a bus reroute is allocated, not just a hold
+# How a manually-blocked segment's cause should read in an explanation --
+# "flood risk" is only ever accurate when rain is actually the cause.
+CAUSE_RISK_PHRASE = {
+    "tree_fall": "a fallen tree",
+    "accident": "an accident",
+    "flooding": "flood risk",
+    "landslide": "a landslide",
+    "signal_failure": "a signal failure",
+}
 SPEED_FACTOR = {"fast": 0.16, "slow": 0.10}  # segment-fraction advanced per tick, at 1x speed
 AVG_PASSENGERS_PER_TRAIN = 120
 SIM_TIMEZONE = "Asia/Kolkata"
@@ -43,7 +62,8 @@ SIM_TIMEZONE = "Asia/Kolkata"
 
 class World:
     def __init__(self):
-        self.corridor = json.loads((SYN / "corridor.json").read_text())
+        lines_data = json.loads((SYN / "lines.json").read_text())["lines"]
+        self.lines = {l["id"]: l for l in lines_data}
         self._initial_trains = json.loads((SYN / "trains.json").read_text())
         self._initial_roads = json.loads((SYN / "roads.json").read_text())
         self.trains = deepcopy(self._initial_trains)
@@ -61,7 +81,7 @@ class World:
         self.model.load_model(str(ARTIFACTS / "eta_model.json"))
         self.feature_order = json.loads((ARTIFACTS / "feature_order.json").read_text())
 
-        self.rainfall_mm = 5.0
+        self.rainfall_by_line: dict[str, float] = {lid: 5.0 for lid in self.lines}
         self.manual_incident_boost: dict[str, float] = {}  # segment_id -> extra severity
         self.clock_min = self._current_ist_minute()
         self.approvals = ApprovalWorkflow()
@@ -74,16 +94,30 @@ class World:
         self.road_blocked_segments: set[str] = set()  # roads unusable => no bus diversion there
         self._plan_counter = 0
 
-        self.segments_by_id = {s["id"]: s for s in self.corridor["segments"]}
-        self.stations_by_code = {s["code"]: s for s in self.corridor["stations"]}
+        self.segments_by_id = {}
+        self.stations_by_code = {}
+        self.line_segments: dict[str, list[dict]] = {}
+        self.line_stations: dict[str, list[dict]] = {}
+        for line_id, line in self.lines.items():
+            ordered_stations = sorted(line["stations"], key=lambda s: s["order"])
+            self.line_stations[line_id] = ordered_stations
+            self.line_segments[line_id] = line["segments"]
+            for s in ordered_stations:
+                self.stations_by_code[s["code"]] = s
+            for seg in line["segments"]:
+                self.segments_by_id[seg["id"]] = seg
         self.roads_by_segment = {r["shadows_segment"]: r for r in self.roads}
         self._decorate_train_routes()
 
     # -------------------------------------------------------------- risk
     def segment_flood_risk(self, segment_id: str) -> float:
         seg = self.segments_by_id[segment_id]
+        # Rainfall is a LOCAL weather event per line, not a city-wide constant --
+        # rain on the Western line must not flag every train on the Harbour or
+        # Central lines as at-risk. Each line tracks its own rainfall reading.
+        rainfall = self.rainfall_by_line.get(seg["line_id"], 5.0)
         threshold = self.calibration["disruption_threshold_mm"]
-        excess = max(0.0, self.rainfall_mm - threshold)
+        excess = max(0.0, rainfall - threshold)
         risk = min(1.0, excess / 100.0 + seg["base_risk"])
         risk += self.manual_incident_boost.get(segment_id, 0.0)
         return min(1.0, risk)
@@ -100,7 +134,7 @@ class World:
         Returns the worst segment within the look-ahead window, how many segments
         away it is, and roughly how many minutes until the train gets there.
         """
-        segs = self.corridor["segments"]
+        segs = self.line_segments[train["line_id"]]
         idx = train["current_segment_index"]
         speed = SPEED_FACTOR[train["service_type"]]  # segment-fraction per simulated minute
 
@@ -110,7 +144,12 @@ class World:
             if i >= len(segs):
                 break
             seg_id = segs[i]["id"]
-            risk = self.segment_flood_risk(seg_id)
+            # A segment that's actually BLOCKED (track or road) is a certain
+            # hazard, not a probabilistic one -- it must never be out-ranked by
+            # some other segment's merely-elevated flood risk, or the model
+            # ends up explaining the wrong segment (and the wrong cause)
+            # entirely for a closure that has nothing to do with rain.
+            risk = max(self.segment_flood_risk(seg_id), 0.95 if seg_id in self.blocked_segments else 0.0)
             if risk > worst["risk"]:
                 # distance to the START of that segment, accounting for current progress
                 segments_to_go = max(0.0, offset - train["progress_in_segment"])
@@ -121,6 +160,20 @@ class World:
         if worst["segment_id"] is None:
             worst["segment_id"] = segs[min(idx, len(segs) - 1)]["id"]
         return worst
+
+    def _risk_label_override(self, segment_id: str) -> dict | None:
+        """A manually-blocked segment's real cause (or lack of one) should
+        drive the explanation, never a hardcoded assumption that everything
+        is about flooding -- a road block from an accident has nothing to do
+        with rain, and saying so is actively misleading to both operator and
+        rider."""
+        info = self.blocked_segments.get(segment_id)
+        if not info:
+            return None
+        phrase = CAUSE_RISK_PHRASE.get(info.get("cause"))
+        if not phrase:
+            phrase = "a road closure" if info["kind"] == "road_block" else "a track closure"
+        return {"flood_risk_ahead": phrase}
 
     # -------------------------------------------------------------- tick
     async def tick(self):
@@ -147,7 +200,7 @@ class World:
         })
 
     def _advance_train(self, train: dict, move: bool = True):
-        segs = self.corridor["segments"]
+        segs = self.line_segments[train["line_id"]]
         idx = train["current_segment_index"]
         if idx >= len(segs):
             if not move:
@@ -176,9 +229,10 @@ class World:
             "road_congestion_index": congestion,
             "hour_of_day": (self.clock_min // 60) % 24,
             "segment_base_risk": self.segments_by_id[hazard_segment_id]["base_risk"],
-            "rainfall_mm": self.rainfall_mm,
+            "rainfall_mm": self.rainfall_by_line.get(train["line_id"], 5.0),
         }
-        exp = explain_prediction(self.model, self.feature_order, row)
+        exp = explain_prediction(self.model, self.feature_order, row,
+                                  label_overrides=self._risk_label_override(hazard_segment_id))
         train["risk_ahead"] = round(risk, 3)
         train["hazard_segment_ahead"] = hazard_segment_id if risk >= 0.2 else None
         train["minutes_to_hazard"] = ahead["minutes_away"] if risk >= 0.2 else None
@@ -208,8 +262,8 @@ class World:
 
     # -------------------------------------------------------------- routes (for map current/proposed/approved lines)
     def route_stations(self, train: dict, diversion_segment_id: str | None = None) -> list[str]:
-        stations = sorted(self.corridor["stations"], key=lambda s: s["order"])
-        segs = self.corridor["segments"]
+        stations = self.line_stations[train["line_id"]]
+        segs = self.line_segments[train["line_id"]]
         idx = min(train["current_segment_index"], len(segs) - 1)
         start_code = segs[idx]["from"]
         start_order = self.stations_by_code[start_code]["order"]
@@ -233,11 +287,12 @@ class World:
         )
         robust_explanation = explain_robust_decision(robust)
 
-        conflicts = find_downstream_conflicts(self.trains, train["id"], exp.predicted_delay_min)
+        line_trains = [t for t in self.trains if t["line_id"] == train["line_id"]]
+        conflicts = find_downstream_conflicts(line_trains, train["id"], exp.predicted_delay_min)
         plan = solve_plan(
             conflicts=conflicts,
             affected_segment_id=segment_id,
-            corridor_segments=self.corridor["segments"],
+            corridor_segments=self.line_segments[train["line_id"]],
             buses=self.buses,
             chargers=self.chargers,
             stations_by_code=self.stations_by_code,
@@ -497,19 +552,20 @@ class World:
         return {
             "type": "sim_tick",
             "clock_min": self.clock_min,
-            "rainfall_mm": self.rainfall_mm,
+            "rainfall_by_line": self.rainfall_by_line,
             "paused": self.paused,
             "speed_multiplier": self.speed_multiplier,
             "timezone": SIM_TIMEZONE,
             "timezone_label": "IST",
             "trains": self.trains,
+            "lines": {lid: {"name": l["name"], "color": l["color"]} for lid, l in self.lines.items()},
             "segments": [
                 {**seg, "flood_risk": round(self.segment_flood_risk(seg["id"]), 3),
                  "congestion": self.segment_congestion(seg["id"]),
                  "blocked": self.blocked_segments.get(seg["id"])}
-                for seg in self.corridor["segments"]
+                for line in self.lines.values() for seg in line["segments"]
             ],
-            "stations": self.corridor["stations"],
+            "stations": list(self.stations_by_code.values()),
             "roads": self.roads,
             "buses": self.buses,
             "chargers": self.chargers,
@@ -517,15 +573,15 @@ class World:
             "manual_events": self.manual_events,
         }
 
-    def set_rainfall(self, mm: float):
-        self.rainfall_mm = max(0.0, mm)
+    def set_rainfall(self, mm: float, line_id: str = "central_main"):
+        self.rainfall_by_line[line_id] = max(0.0, mm)
 
     def reset_operations(self, reset_clock: bool = True):
         self.trains = deepcopy(self._initial_trains)
         self.roads = deepcopy(self._initial_roads)
         self.buses = deepcopy(self._initial_buses)
         self.chargers = deepcopy(self._initial_chargers)
-        self.rainfall_mm = 5.0
+        self.rainfall_by_line = {lid: 5.0 for lid in self.lines}
         self.manual_incident_boost.clear()
         self.blocked_segments.clear()
         self.road_blocked_segments.clear()
@@ -537,14 +593,12 @@ class World:
         self._decorate_train_routes()
 
     def _decorate_train_routes(self):
-        route_names = [
-            "Central Fast", "Central Slow", "Inner Suburban", "Peak Fast",
-            "All-stop Local", "Harbour Connector", "Semi-fast", "Worker Local",
-            "Monsoon Local", "Airport Link", "Limited Stop", "Late Peak",
-        ]
+        service_labels = {"fast": "Fast", "slow": "Slow"}
         for idx, train in enumerate(self.trains):
-            train["route_name"] = route_names[idx % len(route_names)]
-            train["route_code"] = f"CR-{idx + 1:02d}"
+            line = self.lines.get(train["line_id"], {})
+            label = service_labels.get(train["service_type"], train["service_type"].title())
+            train["route_name"] = f"{line.get('name', train['line_id'])} {label}"
+            train["route_code"] = f"{train['line_id'][:3].upper()}-{idx + 1:02d}"
 
     def inject_incident(self, event: dict):
         segment_id = event.get("location")
@@ -552,7 +606,7 @@ class World:
             self.manual_incident_boost[segment_id] = event.get("severity", 0.5)
 
     def block_segment(self, segment_id: str, kind: str, severity: float, note: str = "",
-                      duration_min: int = DEFAULT_BLOCK_DURATION_MIN):
+                      duration_min: int = DEFAULT_BLOCK_DURATION_MIN, cause: str = "unspecified"):
         """A track/road blockage is just a very severe event on one segment --
         same event schema, same downstream pipeline, no special-case code.
         Blockages expire on their own so the demo can't get stuck in a state
@@ -573,7 +627,7 @@ class World:
             self.road_blocked_segments.add(segment_id)
 
         self.blocked_segments[segment_id] = {
-            "kind": kind, "severity": severity, "note": note,
+            "kind": kind, "severity": severity, "note": note, "cause": cause,
             "since_min": self.clock_min, "until_min": self.clock_min + duration_min,
             "duration_min": duration_min,
         }
@@ -586,6 +640,24 @@ class World:
             "source": "admin_injected", "raw_text": note or f"{kind} on {segment_id}",
         }
         self.manual_events.append({**event, "timestamp": time.time(), "text": note or f"{kind.replace('_', ' ')} on {segment_id}"})
+
+        # Real-world causes (a fallen tree, an accident, flooding...) are outside
+        # the operator's own authority to fix -- notify whoever actually owns
+        # that problem, and record what severity-based response we're taking
+        # while we wait: a high-severity block gets a bus reroute allocated
+        # immediately rather than just holding trains and hoping it clears.
+        authority = AUTHORITY_BY_CAUSE.get(cause)
+        if authority:
+            reroute_action = (
+                "Bus reroute allocated for affected services" if severity >= SEVERITY_REROUTE_THRESHOLD
+                else "Monitoring — hold-only response while severity is assessed"
+            )
+            self.manual_events.append({
+                "type": "authority_alert", "authority": authority, "cause": cause,
+                "location": segment_id, "severity": severity, "reroute_action": reroute_action,
+                "timestamp": time.time(),
+                "text": f"{authority} notified — {cause.replace('_', ' ')} on {segment_id.replace('_', ' to ')}. {reroute_action}.",
+            })
         return event
 
     def clear_segment(self, segment_id: str):

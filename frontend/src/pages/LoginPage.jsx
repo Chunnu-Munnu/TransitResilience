@@ -6,18 +6,19 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
 
   function submit(e) {
     e.preventDefault();
-    const result = login(username.trim().toLowerCase(), password);
+    const result = login(username.trim().toLowerCase(), email.trim(), password);
     if (!result.ok) { setError(result.error); return; }
     navigate(result.role === "operator" ? "/admin" : "/", { replace: true });
   }
 
   function quickFill(u) {
-    setUsername(u); setPassword(u); setError(null);
+    setUsername(u); setEmail(`${u}@transitresilience.demo`); setPassword(u); setError(null);
   }
 
   return (
@@ -58,6 +59,9 @@ export default function LoginPage() {
 
           <label className="field-label" htmlFor="login-user">Username</label>
           <input id="login-user" type="text" value={username} onChange={(e) => setUsername(e.target.value)} autoFocus autoComplete="username" />
+
+          <label className="field-label" htmlFor="login-email">Email</label>
+          <input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="you@example.com" />
 
           <label className="field-label" htmlFor="login-pass">Password</label>
           <input id="login-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />

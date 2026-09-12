@@ -1,7 +1,11 @@
 import { CircleMarker, Tooltip } from "react-leaflet";
 
 export default function StationLayer({ stations, dark }) {
-  return stations.map((s) => (
+  // Junction stations (KYN, CSTM, CLA) appear once per line they serve;
+  // de-dupe by code so the map shows one marker per physical station.
+  const seen = new Set();
+  const unique = stations.filter((s) => (seen.has(s.code) ? false : (seen.add(s.code), true)));
+  return unique.map((s) => (
     <CircleMarker
       key={s.code}
       center={[s.lat, s.lon]}

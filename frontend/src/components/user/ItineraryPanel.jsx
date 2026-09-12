@@ -1,22 +1,23 @@
 import { useEffect, useState } from "react";
-import { loadStations } from "../map/mapGeo";
+import { loadStations, stationsForLine } from "../map/mapGeo";
 import { buildTripItinerary, formatClock12 } from "../../utils/eta";
 
 // The stop-by-stop plan, in its own column so it's always visible rather than
 // buried under the trip card. If the passenger chose the bus, the change point
 // is called out inline with the platform, and the steps after it are shown as
 // the bus leg rather than pretending they're still on the train.
-export default function ItineraryPanel({ train, originCode, destinationCode, hazards, clockMin, recommendation, chosenOption }) {
-  const [stations, setStations] = useState([]);
-  useEffect(() => { loadStations().then(setStations); }, []);
+export default function ItineraryPanel({ train, lineId, originCode, destinationCode, hazards, clockMin, recommendation, chosenOption }) {
+  const [allStations, setAllStations] = useState([]);
+  useEffect(() => { loadStations().then(setAllStations); }, []);
 
+  const stations = stationsForLine(allStations, lineId);
   if (!train || !stations.length) return null;
 
   const destStation = stations.find((s) => s.code === destinationCode);
   const originStation = stations.find((s) => s.code === originCode);
   const originOrder = originStation?.order ?? 1;
   const destinationOrder = destStation?.order ?? stations.length;
-  const segmentCount = hazards.length || stations.length - 1;
+  const segmentCount = hazards.filter((h) => h.line_id === lineId).length || stations.length - 1;
   const itinerary = buildTripItinerary(train, stations, originOrder, destinationOrder, clockMin, segmentCount);
 
   const action = recommendation?.plan?.passenger_action;
@@ -50,19 +51,20 @@ export default function ItineraryPanel({ train, originCode, destinationCode, haz
             const leg = legFor(stop);
             return (
               <div
-                className={`itin-row leg-${leg} ${stop.isDestination ? "dest" : ""} ${stop.isNext ? "next" : ""} ${stop.code === changeAt ? "divert" : ""}`}
+                className={`itin-row leg-${leg} ${stop.isDestination ? "dest" : ""} ${stop.isNext ? "next" : ""} ${stop.code === changeAt ? "divert" : ""} ${stop.isPast ? "past" : ""}`}
                 key={stop.code}
               >
-                <span className="itin-node" />
+                <span className="itin-node">{stop.isPast ? "✓" : ""}</span>
                 <span className="itin-name">
                   {stop.name}
+                  {stop.isPast && <span className="itin-tag past-tag">departed</span>}
                   {stop.isNext && <span className="itin-tag">next stop</span>}
                   {stop.isBoarding && <span className="itin-tag">board here</span>}
                   {stop.code === changeAt && <span className="itin-tag divert-tag">change to bus · Pl. {busOption.platform}</span>}
                   {stop.code === rejoinAt && <span className="itin-tag">back on rail</span>}
                   {stop.isDestination && <span className="itin-tag dest-tag">you get off here</span>}
                 </span>
-                <span className="itin-time mono">{formatClock12(stop.arrival)}</span>
+                <span className="itin-time mono">{stop.isPast ? "—" : formatClock12(stop.arrival)}</span>
               </div>
             );
           })}

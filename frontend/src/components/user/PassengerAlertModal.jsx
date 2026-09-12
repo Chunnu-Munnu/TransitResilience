@@ -7,6 +7,7 @@ import { useState } from "react";
 export default function PassengerAlertModal({ recommendation, train, onClose, onChooseBus }) {
   const [confirmingBus, setConfirmingBus] = useState(false);
   const pending = recommendation.status === "pending";
+  const rejected = recommendation.status === "rejected";
   const action = recommendation.plan?.passenger_action;
   const options = action?.options || [];
   const stay = options.find((o) => o.id === "stay_on_train");
@@ -91,9 +92,11 @@ export default function PassengerAlertModal({ recommendation, train, onClose, on
           )}
         </div>
 
-        <div className={`approval-state ${pending ? "pending" : "approved"}`}>
+        <div className={`approval-state ${pending ? "pending" : rejected ? "rejected" : "approved"}`}>
           {pending
             ? "A control-room operator is still reviewing this plan. We'll update you the moment it's confirmed."
+            : rejected
+            ? "The control room rejected this specific plan -- if the delay is still developing, a new one may follow shortly."
             : `Confirmed by the control room${recommendation.decided_by ? ` (${recommendation.decided_by})` : ""}.`}
         </div>
 

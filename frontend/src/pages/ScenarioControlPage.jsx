@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useOperationsSocket } from "../hooks/useOperationsSocket";
 import { useOperations } from "../state/operationsStore.jsx";
 import AdminLayout from "../components/layout/AdminLayout";
@@ -25,7 +26,7 @@ function RobustScenarioTable({ recommendation }) {
     return (
       <div className="card">
         <h2>Robust Decision — Monte Carlo Scenarios</h2>
-        <p className="empty">No active hazard. Raise rainfall past 65mm or close a segment to trigger one.</p>
+        <p className="empty">No active hazard. Raise rainfall past 65mm, or close a segment (track/road, any cause), to trigger one.</p>
       </div>
     );
   }
@@ -35,10 +36,10 @@ function RobustScenarioTable({ recommendation }) {
 
   return (
     <div className="card">
-      <h2>What if the flood arrives early or late?</h2>
+      <h2>What if the timing is off?</h2>
       <p className="muted" style={{ marginBottom: 14 }}>
-        Forecast says the water hits in <b>{decision.onset_minutes} min</b>, but that could be off by ±10 min.
-        Each option below was replayed against <b>10 different arrival times</b>.
+        Your train reaches it in about <b>{decision.onset_minutes} min</b>, but that could be off by ±10 min.
+        Each option below was replayed against <b>10 different timings</b>.
       </p>
 
       {decision.scenarios.map((s) => {
@@ -77,7 +78,13 @@ function RobustScenarioTable({ recommendation }) {
 export default function ScenarioControlPage() {
   useOperationsSocket();
   const { state } = useOperations();
-  const activeRecommendation = state.recommendations.find((r) => r.status === "pending")
+  const [selectedSegmentId, setSelectedSegmentId] = useState(null);
+  // Highest-severity pending candidate first -- a confidence-ordered queue,
+  // not whichever candidate happened to be created most recently.
+  const pendingBySeverity = [...state.recommendations]
+    .filter((r) => r.status === "pending")
+    .sort((a, b) => b.severity - a.severity);
+  const activeRecommendation = pendingBySeverity[0]
     || state.recommendations[state.recommendations.length - 1]
     || null;
 
@@ -97,7 +104,7 @@ export default function ScenarioControlPage() {
       left={
         <>
           <SimulationControls />
-          <BlockageControls hazards={state.hazards} clockMin={state.simulationTime} />
+          <BlockageControls hazards={state.hazards} clockMin={state.simulationTime} selectedSegmentId={selectedSegmentId} />
         </>
       }
       map={
@@ -105,14 +112,20 @@ export default function ScenarioControlPage() {
           {/* Scenario view is about ONE disruption, so only the train under
               consideration (and the trains it cascades into) are drawn. The full
               fleet lives on the Operations page. */}
-          <NetworkMap trains={scenarioTrains} hazards={state.hazards} theme="dark" activePlan={activeRecommendation} />
+          <NetworkMap
+            trains={scenarioTrains}
+            hazards={state.hazards}
+            theme="dark"
+            activePlan={activeRecommendation}
+            onSelectSegment={setSelectedSegmentId}
+            selectedSegmentId={selectedSegmentId}
+          />
           <MapLegend />
-          {activeRecommendation && (
-            <div className="map-focus-note">
-              Showing {scenarioTrains.length} train{scenarioTrains.length === 1 ? "" : "s"} involved in this scenario ·
-              full fleet on Operations
-            </div>
-          )}
+          <div className="map-focus-note">
+            {activeRecommendation
+              ? `Showing ${scenarioTrains.length} train${scenarioTrains.length === 1 ? "" : "s"} involved in this scenario · full fleet on Operations`
+              : "Click a track to select it for a blockage — everything beyond it updates in real time."}
+          </div>
         </div>
       }
       right={
@@ -120,7 +133,7 @@ export default function ScenarioControlPage() {
           <RobustScenarioTable recommendation={activeRecommendation} />
           {/* The operator's decision power belongs here too, not only on Operations --
               you should be able to act on the scenario you're looking at. */}
-          <RecommendationPanel recommendation={activeRecommendation} />
+          <RecommendationPanel recommendation={activeRecommendation} queueTotal={pendingBySeverity.length} nextUp={pendingBySeverity.find((r) => r.id !== activeRecommendation?.id) || null} />
           <PropagationGraph recommendation={activeRecommendation} />
         </>
       }

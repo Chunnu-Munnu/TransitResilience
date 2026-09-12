@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { formatClock, useSimulation } from "../../hooks/useSimulation";
 import { api } from "../../services/api";
+import { LINES } from "../user/TrainPickerModal";
 
 // Section 32. "The simulation clock and train positions come from backend
 // simulation state. The browser must not independently invent train positions" --
@@ -9,8 +10,10 @@ import { api } from "../../services/api";
 export default function SimulationControls() {
   const { clockMin, paused, speedMultiplier, toggle, setSpeed, runWhatIf } = useSimulation();
   const [rainfall, setRainfall] = useState(5);
+  const [lineId, setLineId] = useState("central_main");
   const [resetting, setResetting] = useState(false);
   const [flash, setFlash] = useState(null);
+  const selectedLine = LINES.find((l) => l.id === lineId) || LINES[0];
 
   async function resetAll() {
     setResetting(true);
@@ -44,17 +47,23 @@ export default function SimulationControls() {
       </p>
 
       <h2 style={{ marginTop: 16 }}>Inject Rainfall Anomaly</h2>
-      <label className="slider-row">
+      <label className="field-label">Which line is this rain hitting?</label>
+      <select value={lineId} onChange={(e) => setLineId(e.target.value)}>
+        {LINES.map((l) => (
+          <option key={l.id} value={l.id}>{l.name}</option>
+        ))}
+      </select>
+      <label className="slider-row" style={{ marginTop: 8 }}>
         <span>Rainfall intensity</span>
         <span className="mono">{rainfall} mm</span>
       </label>
       <input type="range" min={0} max={150} value={rainfall} onChange={(e) => setRainfall(parseFloat(e.target.value))} />
       <div className="threshold-hint">
-        Disruption threshold is <b>64.5 mm</b> — IMD's official "heavy rainfall" band, which this corridor
-        crosses ~8 days a year in the real 10-year record.
+        Disruption threshold is <b>64.5 mm</b> — IMD's official "heavy rainfall" band. Rain is local to the line
+        you pick above; it won't put other lines at risk.
       </div>
-      <button className="btn-primary full" onClick={() => runWhatIf(rainfall)}>
-        Inject Rainfall Anomaly
+      <button className="btn-primary full" onClick={() => runWhatIf(rainfall, lineId)}>
+        Inject Rainfall on {selectedLine.name}
       </button>
 
       <button className="btn-secondary full" style={{ marginTop: 8 }} disabled={resetting} onClick={resetAll}>

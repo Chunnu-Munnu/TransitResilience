@@ -29,7 +29,14 @@ export function tripTiming(train, originOrder, destinationOrder, clockMin, segme
   const speed = SPEED[train.service_type] || SPEED.slow;
   const covered = train.current_segment_index + (train.progress_in_segment || 0);
   const originSegment = Math.max(0, originOrder - 1);
-  const alreadyPassedOrigin = covered > originSegment + 0.05;
+  // "nextLoop" means the train's CURRENT lap has already gone past your whole
+  // trip (both origin and destination) and won't be back until it loops --
+  // checking only against origin was wrong: the moment you board and ride
+  // forward, `covered` naturally passes originSegment every single trip, which
+  // froze the itinerary into a static "next run" schedule (isPast hardcoded
+  // false) instead of showing your live progress toward the destination.
+  const destinationSegment = Math.max(0, destinationOrder - 1);
+  const alreadyPassedOrigin = covered > destinationSegment + 0.05;
   const segmentsToBoard = alreadyPassedOrigin
     ? Math.max(0, segmentCount - covered) + originSegment
     : Math.max(0, originSegment - covered);
@@ -53,17 +60,20 @@ export function formatClockIST(clockMin) {
   return `${formatClock12(clockMin)} IST`;
 }
 
-/** Per-stop itinerary from the train's current position to the chosen destination. */
+/** Per-stop itinerary from the trip's origin to the chosen destination. Stations the
+ * train has already left stay in the list (marked isPast) instead of disappearing,
+ * so progress through the journey is visible rather than the list just shrinking. */
 export function buildItinerary(train, stations, destinationOrder, clockMin, segmentCount) {
   const covered = train.current_segment_index + (train.progress_in_segment || 0);
   return stations
-    .filter((s) => s.order - 1 >= Math.floor(covered) && s.order <= destinationOrder)
+    .filter((s) => s.order <= destinationOrder)
     .map((s) => ({
       code: s.code,
       name: s.name,
       order: s.order,
       arrival: arrivalMinuteOfDay(train, s.order, clockMin, segmentCount),
       isDestination: s.order === destinationOrder,
+      isPast: s.order - 1 < Math.floor(covered),
       isNext: s.order - 1 === Math.ceil(covered),
     }));
 }
@@ -80,6 +90,7 @@ export function buildTripItinerary(train, stations, originOrder, destinationOrde
         order: s.order,
         arrival: timing.boardAt + ((s.order - originOrder) / speed),
         isDestination: s.order === destinationOrder,
+        isPast: false,
         isNext: s.order === originOrder,
         isBoarding: s.order === originOrder,
       }));

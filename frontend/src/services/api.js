@@ -52,17 +52,17 @@ export const api = {
       body: JSON.stringify({ plan_id: planId, hold_overrides: holdOverrides }),
     }),
 
-  blockSegment: (segmentId, kind, severity, note, durationMin = 45) =>
+  blockSegment: (segmentId, kind, severity, note, durationMin = 45, cause = "unspecified") =>
     request("/api/hazards/block", {
       method: "POST",
-      body: JSON.stringify({ segment_id: segmentId, kind, severity, note, duration_min: durationMin }),
+      body: JSON.stringify({ segment_id: segmentId, kind, severity, note, duration_min: durationMin, cause }),
     }),
   clearSegment: (segmentId) => request(`/api/hazards/clear/${segmentId}`, { method: "POST" }),
 
-  whatIf: (rainfallMm) =>
+  whatIf: (rainfallMm, lineId = "central_main") =>
     request("/api/simulation/what-if", {
       method: "POST",
-      body: JSON.stringify({ rainfall_mm: rainfallMm }),
+      body: JSON.stringify({ rainfall_mm: rainfallMm, line_id: lineId }),
     }),
   setSpeed: (multiplier) =>
     request("/api/simulation/speed", {

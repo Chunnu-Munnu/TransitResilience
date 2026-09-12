@@ -42,7 +42,7 @@ def get_train(train_id: str):
 def list_hazards():
     return [
         {**seg, "flood_risk": round(_world.segment_flood_risk(seg["id"]), 3)}
-        for seg in _world.corridor["segments"]
+        for seg in _world.segments_by_id.values()
     ]
 
 
@@ -129,15 +129,17 @@ def validate(body: ValidateIn):
 class WhatIfIn(BaseModel):
     rainfall_mm: float | None = None
     rainfall_multiplier: float | None = None
+    line_id: str = "central_main"
 
 
 @router.post("/api/simulation/what-if")
 def what_if(body: WhatIfIn):
     if body.rainfall_mm is not None:
-        _world.set_rainfall(body.rainfall_mm)
+        _world.set_rainfall(body.rainfall_mm, body.line_id)
     elif body.rainfall_multiplier is not None:
-        _world.set_rainfall(_world.rainfall_mm * body.rainfall_multiplier)
-    return {"ok": True, "rainfall_mm": _world.rainfall_mm}
+        current = _world.rainfall_by_line.get(body.line_id, 5.0)
+        _world.set_rainfall(current * body.rainfall_multiplier, body.line_id)
+    return {"ok": True, "rainfall_by_line": _world.rainfall_by_line}
 
 
 class BlockageIn(BaseModel):
@@ -146,6 +148,7 @@ class BlockageIn(BaseModel):
     severity: float = 0.95
     note: str = ""
     duration_min: int = 45
+    cause: str = "unspecified"  # unspecified | tree_fall | accident | flooding | landslide | signal_failure
 
 
 @router.post("/api/hazards/block")
@@ -153,7 +156,7 @@ def block_segment(body: BlockageIn):
     """Close a specific track or parallel road. Feeds the same event pipeline
     as rainfall -- the ETA model, propagation graph and optimizer treat it
     identically, which is the whole point of the shared event schema."""
-    event = _world.block_segment(body.segment_id, body.kind, body.severity, body.note, body.duration_min)
+    event = _world.block_segment(body.segment_id, body.kind, body.severity, body.note, body.duration_min, body.cause)
     if event is None:
         raise HTTPException(404, "unknown segment")
     return {"ok": True, "event": event, "blocked": _world.blocked_segments}

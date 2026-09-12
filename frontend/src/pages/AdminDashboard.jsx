@@ -19,10 +19,17 @@ export default function AdminDashboard() {
   const { state } = useOperations();
   const { trains, selectedTrain, selectedTrainId, selectTrain } = useTrains();
 
+  // Review queue is ordered by confidence (severity) so the operator always
+  // works through the most-certain, highest-impact call first -- not
+  // whichever candidate happened to arrive most recently.
+  const pendingBySeverity = [...state.recommendations]
+    .filter((r) => r.status === "pending")
+    .sort((a, b) => b.severity - a.severity);
   const activeRecommendation =
-    state.recommendations.find((r) => r.train_id === selectedTrainId && r.status === "pending") ||
-    state.recommendations.find((r) => r.status === "pending") ||
+    (selectedTrainId && pendingBySeverity.find((r) => r.train_id === selectedTrainId)) ||
+    pendingBySeverity[0] ||
     null;
+  const nextUp = pendingBySeverity.find((r) => r.id !== activeRecommendation?.id) || null;
 
   return (
     <AdminLayout
@@ -49,7 +56,7 @@ export default function AdminDashboard() {
       }
       right={
         <>
-          <RecommendationPanel recommendation={activeRecommendation} />
+          <RecommendationPanel recommendation={activeRecommendation} queueTotal={pendingBySeverity.length} nextUp={nextUp} />
           <TrainDetails train={selectedTrain} hazards={state.hazards} clockMin={state.simulationTime} recommendation={activeRecommendation} />
           <PropagationGraph recommendation={activeRecommendation} />
           <ImpactPanel metrics={state.metrics} />

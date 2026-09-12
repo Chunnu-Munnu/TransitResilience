@@ -53,12 +53,13 @@ def get_state():
 
 class AnomalyIn(BaseModel):
     rainfall_mm: float
+    line_id: str = "central_main"
 
 
 @app.post("/api/anomaly")
 def post_anomaly(body: AnomalyIn):
-    world.set_rainfall(body.rainfall_mm)
-    return {"ok": True, "rainfall_mm": world.rainfall_mm}
+    world.set_rainfall(body.rainfall_mm, body.line_id)
+    return {"ok": True, "rainfall_by_line": world.rainfall_by_line}
 
 
 class IncidentIn(BaseModel):
@@ -108,18 +109,30 @@ class TripPlanIn(BaseModel):
 
 @app.post("/api/trip/plan")
 def post_trip_plan(body: TripPlanIn):
-    stations = world.corridor["stations"]
-    codes = {s["code"]: s for s in stations}
-    if body.origin not in codes or body.destination not in codes:
+    if body.origin not in world.stations_by_code or body.destination not in world.stations_by_code:
         return {"ok": False, "error": "unknown station code"}
-    origin_order = codes[body.origin]["order"]
-    dest_order = codes[body.destination]["order"]
-    if dest_order <= origin_order:
-        return {"ok": False, "error": "destination must be further along the corridor than origin"}
 
-    candidates = [t for t in world.trains if t["current_segment_index"] <= origin_order]
+    # Station "order" is only meaningful within one line -- a junction code like
+    # KYN/CSTM has a different order on each line it serves -- so find a line
+    # that actually contains both codes before comparing their order.
+    line_id = None
+    origin_order = dest_order = None
+    for lid, stations in world.line_stations.items():
+        by_code = {s["code"]: s["order"] for s in stations}
+        if body.origin in by_code and body.destination in by_code:
+            line_id = lid
+            origin_order = by_code[body.origin]
+            dest_order = by_code[body.destination]
+            break
+    if line_id is None:
+        return {"ok": False, "error": "origin and destination are not on the same line"}
+    if dest_order <= origin_order:
+        return {"ok": False, "error": "destination must be further along the line than origin"}
+
+    line_trains = [t for t in world.trains if t["line_id"] == line_id]
+    candidates = [t for t in line_trains if t["current_segment_index"] <= origin_order]
     if not candidates:
-        candidates = world.trains
+        candidates = line_trains
     best = min(candidates, key=lambda t: t["current_segment_index"])
     segments_to_cover = dest_order - origin_order
     speed = 0.16 if best["service_type"] == "fast" else 0.10

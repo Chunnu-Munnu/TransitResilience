@@ -15,7 +15,7 @@ const SATELLITE_TILE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services
 
 // Layer architecture (Section 6): Leaflet/OSM base -> our GeoJSON network ->
 // live TransitResilience state (trains/hazards/routes) on top.
-export default function NetworkMap({ trains, hazards, theme = "dark", selectedTrainId, onSelectTrain, activePlan }) {
+export default function NetworkMap({ trains, hazards, theme = "dark", selectedTrainId, onSelectTrain, activePlan, myLineId, onSelectSegment, selectedSegmentId }) {
   const [stations, setStations] = useState([]);
   const [baseLayer, setBaseLayer] = useState("street");
 
@@ -37,9 +37,9 @@ export default function NetworkMap({ trains, hazards, theme = "dark", selectedTr
         <button className={baseLayer === "satellite" ? "active" : ""} onClick={() => setBaseLayer("satellite")}>Satellite</button>
       </div>
       <StationLayer stations={stations} dark={theme === "dark"} />
-      <TrackLayer stations={stations} hazards={hazards} />
+      <TrackLayer stations={stations} hazards={hazards} myLineId={myLineId} onSelectSegment={onSelectSegment} selectedSegmentId={selectedSegmentId} />
       <HazardLayer stations={stations} hazards={hazards} />
-      <RerouteLayer recommendation={activePlan} stations={stations} hazards={hazards} />
+      <RerouteLayer recommendation={activePlan} stations={stations} hazards={hazards} lineId={myLineId} />
       <TrainLayer trains={trains} stations={stations} hazards={hazards} onSelect={onSelectTrain} selectedTrainId={selectedTrainId} />
     </MapContainer>
   );

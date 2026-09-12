@@ -7,8 +7,8 @@ export default function HazardLayer({ stations, hazards }) {
   return hazards
     .filter((seg) => (seg.flood_risk ?? 0) >= 0.2)
     .map((seg) => {
-      const a = stationByCode(stations, seg.from);
-      const b = stationByCode(stations, seg.to);
+      const a = stationByCode(stations, seg.from, seg.line_id);
+      const b = stationByCode(stations, seg.to, seg.line_id);
       if (!a || !b) return null;
       const risk = seg.flood_risk;
       const mid = [(a.lat + b.lat) / 2, (a.lon + b.lon) / 2];

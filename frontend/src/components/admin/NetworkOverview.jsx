@@ -18,6 +18,10 @@ export default function NetworkOverview({ trains, recommendations }) {
         <MetricCard value={rerouting} label="Rerouting" />
         <MetricCard value={conflicts} label="Platform Conflicts" tone="risk" />
       </div>
+      <p className="threshold-hint">
+        At Risk = a delay is predicted ahead but hasn't happened yet · Delayed = currently running late.
+        A train is only ever one or the other.
+      </p>
     </div>
   );
 }

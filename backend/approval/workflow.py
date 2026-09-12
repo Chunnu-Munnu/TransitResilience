@@ -16,6 +16,7 @@ _id_counter = itertools.count(1)
 AUTO_THRESHOLD = 0.10        # below this: auto-apply immediately (effectively: almost never)
 SENIOR_THRESHOLD = 0.7       # at/above this: no SLA timeout, must be explicit
 SUPERVISOR_SLA_SECONDS = 600  # long enough that a demo never auto-approves behind your back
+MAX_AUDIT_LOG_ENTRIES = 100   # decision log keeps only the most recent 100 entries
 
 
 @dataclass
@@ -95,6 +96,8 @@ class ApprovalWorkflow:
             "tier": cand.tier,
             "timestamp": time.time(),
         })
+        if len(self.audit_log) > MAX_AUDIT_LOG_ENTRIES:
+            self.audit_log = self.audit_log[-MAX_AUDIT_LOG_ENTRIES:]
 
     def as_dict(self, cand: Candidate) -> dict:
         return asdict(cand)

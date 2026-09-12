@@ -10,7 +10,7 @@ export function useSimulation() {
     connectionStatus: state.connectionStatus,
     toggle: () => api.toggleSim(),
     setSpeed: (multiplier) => api.setSpeed(multiplier),
-    runWhatIf: (rainfallMm) => api.whatIf(rainfallMm),
+    runWhatIf: (rainfallMm, lineId) => api.whatIf(rainfallMm, lineId),
   };
 }
 

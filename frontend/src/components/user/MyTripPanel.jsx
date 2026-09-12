@@ -1,22 +1,23 @@
 import { useEffect, useState } from "react";
 import StatusBadge from "../shared/StatusBadge";
-import { loadStations } from "../map/mapGeo";
+import { loadStations, stationsForLine } from "../map/mapGeo";
 import { formatClock12, tripTiming } from "../../utils/eta";
 
 // The passenger's own trip at a glance: status, a real ETA to the station they
 // actually picked, and -- when something goes wrong -- their choice of options.
 // The stop-by-stop plan lives in ItineraryPanel so both stay fully visible.
-export default function MyTripPanel({ train, destinationCode, originCode, hazards, clockMin, recommendation, chosenOption, onChangeTrip }) {
-  const [stations, setStations] = useState([]);
-  useEffect(() => { loadStations().then(setStations); }, []);
+export default function MyTripPanel({ train, lineId, destinationCode, originCode, hazards, clockMin, recommendation, chosenOption, onChangeTrip, onSwitchTrain }) {
+  const [allStations, setAllStations] = useState([]);
+  useEffect(() => { loadStations().then(setAllStations); }, []);
 
+  const stations = stationsForLine(allStations, lineId);
   if (!train || !stations.length) return null;
 
   const destStation = stations.find((s) => s.code === destinationCode);
   const originStation = stations.find((s) => s.code === originCode);
   const destinationOrder = destStation?.order ?? stations.length;
   const originOrder = originStation?.order ?? 1;
-  const segmentCount = hazards.length || stations.length - 1;
+  const segmentCount = hazards.filter((h) => h.line_id === lineId).length || stations.length - 1;
 
   const action = recommendation?.plan?.passenger_action;
   const busOption = action?.options?.find((o) => o.id === "switch_to_bus");
@@ -32,7 +33,10 @@ export default function MyTripPanel({ train, destinationCode, originCode, hazard
     <div className="card trip-card">
       <div className="card-head-row">
         <h2 style={{ margin: 0 }}>My Trip</h2>
-        <button className="link-btn" onClick={onChangeTrip}>Change trip</button>
+        <div className="trip-actions">
+          {onSwitchTrain && <button className="link-btn" onClick={onSwitchTrain}>Switch train</button>}
+          <button className="link-btn" onClick={onChangeTrip}>Change trip</button>
+        </div>
       </div>
 
       <div className="train-detail-head">
@@ -58,7 +62,9 @@ export default function MyTripPanel({ train, destinationCode, originCode, hazard
       {recommendation ? (
         <div className="service-update">
           <div className="service-update-title">
-            {recommendation.status === "approved" ? "SERVICE UPDATE" : "AWAITING OPERATOR APPROVAL"}
+            {recommendation.status === "approved" ? "SERVICE UPDATE"
+              : recommendation.status === "rejected" ? "PLAN REJECTED BY OPERATOR"
+              : "AWAITING OPERATOR APPROVAL"}
           </div>
           <p style={{ margin: 0 }}>{recommendation.rider_explanation}</p>
         </div>

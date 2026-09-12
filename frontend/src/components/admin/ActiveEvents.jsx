@@ -31,10 +31,15 @@ export default function ActiveEvents({ recommendations, manualEvents, onSelect }
         ))}
         {manualEvents.map((e, i) => (
           <div className="event-row" key={`m-${i}`}>
-            <div className="event-icon mid">!</div>
+            <div className={`event-icon ${e.type === "authority_alert" ? "high" : "mid"}`}>{e.type === "authority_alert" ? "⚠" : "!"}</div>
             <div>
-              <div className="event-title">{e.type === "driver_alert" ? "Driver Attention Alert" : "Track Maintenance"}</div>
-              <div className="event-sub">{e.vehicle_id || e.train_id || ""} {e.severity || ""} {e.text || ""}</div>
+              <div className="event-title">
+                {e.type === "authority_alert" ? `Authority Notified — ${e.authority}` :
+                 e.type === "driver_alert" ? "Driver Attention Alert" : "Track Maintenance"}
+              </div>
+              <div className="event-sub">
+                {e.type === "authority_alert" ? e.text : `${e.vehicle_id || e.train_id || ""} ${e.severity || ""} ${e.text || ""}`}
+              </div>
             </div>
             <div className="event-time">{timeLabel(e.timestamp)}</div>
           </div>

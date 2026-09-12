@@ -24,10 +24,19 @@ class Explanation:
     rider_text: str
 
 
-def explain_prediction(model, feature_order, feature_row: dict) -> Explanation:
-    """feature_row: dict of feature_name -> value, in the same schema used for training."""
+def explain_prediction(model, feature_order, feature_row: dict, label_overrides: dict | None = None) -> Explanation:
+    """feature_row: dict of feature_name -> value, in the same schema used for training.
+
+    label_overrides lets a caller relabel a feature for THIS prediction only --
+    e.g. "flood_risk_ahead" really means "flood risk" only when rain is the
+    actual cause; when the hazard segment is a manually-blocked track/road
+    (accident, fallen tree, signal failure...), the explanation should name
+    that real cause instead of defaulting to flood language.
+    """
     import numpy as np
     import xgboost as xgb
+
+    labels = {**FEATURE_LABELS, **(label_overrides or {})}
 
     x = np.array([[feature_row[f] for f in feature_order]], dtype=float)
     dmatrix = xgb.DMatrix(x, feature_names=feature_order)
@@ -46,12 +55,12 @@ def explain_prediction(model, feature_order, feature_row: dict) -> Explanation:
     admin_lines = [f"Predicted additional delay: {predicted:.0f} min."]
     for f, c in top:
         sign = "+" if c >= 0 else ""
-        admin_lines.append(f"  {FEATURE_LABELS.get(f, f)}: {sign}{c:.0f} min")
+        admin_lines.append(f"  {labels.get(f, f)}: {sign}{c:.0f} min")
     admin_text = "\n".join(admin_lines)
 
     if top:
         leading_feature, leading_val = top[0]
-        rider_text = f"{FEATURE_LABELS.get(leading_feature, leading_feature).capitalize()} flagged near your route."
+        rider_text = f"{labels.get(leading_feature, leading_feature).capitalize()} flagged near your route."
     else:
         rider_text = "Minor timing adjustment."
 
