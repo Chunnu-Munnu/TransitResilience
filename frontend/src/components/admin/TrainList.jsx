@@ -2,14 +2,14 @@ import StatusBadge from "../shared/StatusBadge";
 
 export default function TrainList({ trains, selectedTrainId, onSelect }) {
   return (
-    <div className="card" style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-      <h2>Trains</h2>
-      <div>
+    <div className="card train-list-card" style={{ flex: 1, minHeight: "240px", display: "flex", flexDirection: "column" }}>
+      <h2 style={{ flexShrink: 0, marginBottom: "10px" }}>Trains ({trains.length})</h2>
+      <div style={{ flex: 1, overflowY: "auto", minHeight: "160px", paddingRight: "4px" }}>
         {trains.map((t) => (
           <div
             key={t.id}
             className={`train-row ${t.id === selectedTrainId ? "selected" : ""}`}
-            onClick={() => onSelect(t.id)}
+            onClick={() => onSelect && onSelect(t.id)}
           >
             <span className={`train-dot ${t.status}`} />
             <div className="train-meta">

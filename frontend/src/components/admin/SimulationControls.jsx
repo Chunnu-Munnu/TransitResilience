@@ -10,7 +10,30 @@ export default function SimulationControls() {
   const { clockMin, paused, speedMultiplier, toggle, setSpeed, runWhatIf } = useSimulation();
   const [rainfall, setRainfall] = useState(5);
   const [resetting, setResetting] = useState(false);
+  const [injecting, setInjecting] = useState(false);
   const [flash, setFlash] = useState(null);
+
+  async function handleInjectRainfall() {
+    setInjecting(true);
+    setFlash(null);
+    try {
+      await runWhatIf(rainfall);
+      const isDisrupted = rainfall >= 64.5;
+      setFlash({
+        ok: true,
+        text: `Rainfall anomaly set to ${rainfall} mm. ${
+          isDisrupted
+            ? "Heavy rainfall threshold (64.5 mm) crossed — risk predictions active on corridor."
+            : "Intensity is below heavy disruption threshold (64.5 mm)."
+        }`,
+      });
+    } catch (e) {
+      setFlash({ ok: false, text: e.message || "Failed to inject rainfall anomaly." });
+    } finally {
+      setInjecting(false);
+      setTimeout(() => setFlash(null), 6000);
+    }
+  }
 
   async function resetAll() {
     setResetting(true);
@@ -53,8 +76,8 @@ export default function SimulationControls() {
         Disruption threshold is <b>64.5 mm</b> — IMD's official "heavy rainfall" band, which this corridor
         crosses ~8 days a year in the real 10-year record.
       </div>
-      <button className="btn-primary full" onClick={() => runWhatIf(rainfall)}>
-        Inject Rainfall Anomaly
+      <button className="btn-primary full" disabled={injecting} onClick={handleInjectRainfall}>
+        {injecting ? "Injecting…" : "Inject Rainfall Anomaly"}
       </button>
 
       <button className="btn-secondary full" style={{ marginTop: 8 }} disabled={resetting} onClick={resetAll}>

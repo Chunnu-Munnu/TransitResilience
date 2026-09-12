@@ -1,0 +1,15 @@
+order,code,name,latitude,longitude,zone,known_monsoon_risk
+1,CSTM,Mumbai CST,18.944481,72.836903,CR,low
+2,BY,Byculla,18.976950,72.833211,CR,medium
+3,DR,Mumbai Dadar Central,19.017179,72.842972,CR,high
+4,CLA,Kurla Jn,19.065221,72.879375,CR,high
+5,GC,Ghatkopar,19.085985,72.908591,CR,medium
+6,VK,Vikhroli,19.111960,72.928312,CR,medium
+7,BND,Bhandup,19.142010,72.937235,CR,medium
+8,NHU,Nahur,19.154646,72.946683,CR,low
+9,MLND,Mulund,19.172355,72.956933,CR,low
+10,TNA,Thane,19.185757,72.975417,CR,high
+11,MBQ,Mumbra,19.190223,73.023260,CR,high
+12,DIVA,Diva,19.188394,73.041905,CR,high
+13,DI,Dombivli,19.218218,73.086900,CR,medium
+14,KYN,Kalyan Jn,19.234716,73.129740,CR,medium

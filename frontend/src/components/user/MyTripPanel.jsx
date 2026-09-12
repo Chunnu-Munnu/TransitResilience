@@ -3,11 +3,29 @@ import StatusBadge from "../shared/StatusBadge";
 import { loadStations } from "../map/mapGeo";
 import { formatClock12, tripTiming } from "../../utils/eta";
 
-// The passenger's own trip at a glance: status, a real ETA to the station they
-// actually picked, and -- when something goes wrong -- their choice of options.
-// The stop-by-stop plan lives in ItineraryPanel so both stay fully visible.
+function formatCountdown(diffMin) {
+  if (diffMin <= 0) return "Arriving now";
+  const hours = Math.floor(diffMin / 60);
+  const mins = Math.floor(diffMin % 60);
+  if (hours > 0) {
+    return `Arriving in ${hours}h ${mins}m`;
+  }
+  return `Arriving in ${mins}m`;
+}
+
+// The passenger's own trip at a glance: status, a real ETA countdown to the station they
+// actually picked, journey progress bar, favorite toggle, and choice of options.
 export default function MyTripPanel({ train, destinationCode, originCode, hazards, clockMin, recommendation, chosenOption, onChangeTrip }) {
   const [stations, setStations] = useState([]);
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem("tr_favorite_trips");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   useEffect(() => { loadStations().then(setStations); }, []);
 
   if (!train || !stations.length) return null;
@@ -24,28 +42,87 @@ export default function MyTripPanel({ train, destinationCode, originCode, hazard
 
   const timing = tripTiming(train, originOrder, destinationOrder, clockMin, segmentCount);
   const railArrival = timing.arriveAt;
-  // If they chose the bus, quote the bus leg's delay instead of the train's.
   const effectiveDelay = takingBus ? busOption.delay_min : (train.delay_min || 0);
   const arrival = takingBus ? railArrival - (train.delay_min || 0) + busOption.delay_min : railArrival;
 
+  const diffMin = arrival - clockMin;
+
+  // Journey Progress Calculation
+  const totalSegments = Math.max(1, destinationOrder - originOrder);
+  const currentPos = (train.current_segment_index ?? 0) + (train.progress_in_segment ?? 0);
+  const originPos = originOrder - 1;
+  const elapsed = Math.max(0, Math.min(totalSegments, currentPos - originPos));
+  const progressPct = Math.round(Math.max(0, Math.min(100, (elapsed / totalSegments) * 100)));
+
+  // Favorites logic
+  const isFav = favorites.some((f) => f.trainId === train.id && f.origin === originCode && f.destination === destinationCode);
+
+  function toggleFavorite() {
+    let updated;
+    if (isFav) {
+      updated = favorites.filter((f) => !(f.trainId === train.id && f.origin === originCode && f.destination === destinationCode));
+    } else {
+      const newFav = { trainId: train.id, origin: originCode, destination: destinationCode, routeName: train.route_name || train.service_type };
+      updated = [newFav, ...favorites.filter((f) => f.trainId !== train.id)].slice(0, 5);
+    }
+    setFavorites(updated);
+    localStorage.setItem("tr_favorite_trips", JSON.stringify(updated));
+  }
+
   return (
     <div className="card trip-card">
-      <div className="card-head-row">
-        <h2 style={{ margin: 0 }}>My Trip</h2>
+      <div className="card-head-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <h2 style={{ margin: 0 }}>My Trip</h2>
+          <button
+            type="button"
+            onClick={toggleFavorite}
+            title={isFav ? "Remove from Favorites" : "Add to Favorites"}
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "1.1rem",
+              color: isFav ? "#EAB308" : "var(--ink-dim, #95A2B8)",
+              padding: 0,
+              lineHeight: 1,
+            }}
+          >
+            {isFav ? "★" : "☆"}
+          </button>
+        </div>
         <button className="link-btn" onClick={onChangeTrip}>Change trip</button>
       </div>
 
-      <div className="train-detail-head">
+      <div className="train-detail-head" style={{ marginTop: "8px" }}>
         <b>{train.id}</b>
         <StatusBadge status={effectiveDelay > 0 ? "at_risk" : "on_time"} delayMin={effectiveDelay} />
       </div>
       <div className="muted">{train.route_name || train.service_type} · {originStation?.name || originCode} → {destStation?.name || destinationCode}</div>
       {timing.nextLoop && <div className="service-update-title" style={{ marginTop: 8 }}>NEXT RUN FROM YOUR BOARDING STATION</div>}
 
-      <div className="eta-hero">
+      {/* Live ETA Countdown */}
+      <div className="eta-hero" style={{ marginTop: "14px" }}>
         <div className="eta-label">Estimated arrival</div>
-        <div className="eta-value">{formatClock12(arrival)}</div>
-        {effectiveDelay > 0 && <div className="eta-delay">+{effectiveDelay} min vs. schedule</div>}
+        <div className="eta-value" style={{ fontSize: "1.6rem", fontWeight: "800" }}>
+          {formatCountdown(diffMin)}
+        </div>
+        <div className="muted" style={{ fontSize: "0.78rem", marginTop: "4px" }}>
+          Clock time: <span className="mono" style={{ fontWeight: "600" }}>{formatClock12(arrival)}</span>
+          {effectiveDelay > 0 && <span className="eta-delay" style={{ marginLeft: "8px" }}>+{effectiveDelay}m vs schedule</span>}
+        </div>
+      </div>
+
+      {/* Journey Progress Bar */}
+      <div className="journey-progress-container" style={{ margin: "14px 0" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "var(--ink-soft)", marginBottom: "6px" }}>
+          <span>{originStation?.name || originCode}</span>
+          <span className="mono" style={{ color: "var(--blue, #2F6FED)", fontWeight: "600" }}>{progressPct}% completed</span>
+          <span>{destStation?.name || destinationCode}</span>
+        </div>
+        <div style={{ height: "6px", background: "var(--surface2, #E2E7F0)", borderRadius: "3px", overflow: "hidden", position: "relative" }}>
+          <div style={{ height: "100%", width: `${progressPct}%`, background: "var(--blue, #2F6FED)", borderRadius: "3px", transition: "width 300ms ease" }} />
+        </div>
       </div>
 
       {takingBus && (

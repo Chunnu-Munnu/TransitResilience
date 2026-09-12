@@ -351,7 +351,7 @@ textarea { width: 100%; padding: 9px 10px; border-radius: 7px; border: 1px solid
 .leaflet-interactive.hazard-pulse { animation: hazardPulse 1.6s ease-in-out infinite; }
 
 /* ============================== Login ============================== */
-.login-page { display: grid; grid-template-columns: 1.1fr 0.9fr; min-height: 100vh; background: #F4F7FB; color: #16202F; }
+.login-page { display: grid; grid-template-columns: 1.1fr 0.9fr; min-height: 100vh; background: #F4F7FB; color: #16202F; font-family: 'IBM Plex Sans', system-ui, sans-serif; transition: background-color 0.4s ease, color 0.4s ease; position: relative; }
 .login-pitch { padding: 56px 52px; display: flex; flex-direction: column; justify-content: center; color: #EEF2F8;
   background: radial-gradient(130% 100% at 0% 0%, #2B4C82 0%, #23375A 48%, #1D2A3D 100%); }
 .login-brand { display: flex; align-items: center; gap: 11px; font-weight: 700; font-size: 1rem; margin-bottom: 40px; }
@@ -366,27 +366,152 @@ textarea { width: 100%; padding: 9px 10px; border-radius: 7px; border: 1px solid
   border: 1px solid rgba(255,255,255,0.28); border-radius: 20px; padding: 5px 12px; }
 .loop-arrow { color: #8FB8FF; margin: 0 4px; }
 
-/* Light form side -- the dark panel carries the mood, the form stays readable. */
-.login-form-side { display: flex; align-items: center; justify-content: center; padding: 40px; background: #FFFFFF; }
+/* Page-level top-right theme toggle placement */
+.login-top-right-header {
+  position: absolute;
+  top: 24px;
+  right: 32px;
+  z-index: 100;
+}
+
+.login-form-side { display: flex; align-items: center; justify-content: center; padding: 40px; background: #FFFFFF; transition: background-color 0.4s ease, color 0.4s ease; }
 .login-form { width: 100%; max-width: 340px; }
-.login-form h2 { font-size: 1.3rem; margin: 0 0 4px; font-weight: 700; color: #16202F; }
-.login-form-sub { color: #5B6B85; font-size: 0.82rem; margin: 0 0 24px; }
-.login-form .field-label { color: #5B6B85; margin-top: 12px; }
+.login-form h2 { font-size: 1.3rem; margin: 0 0 4px; font-weight: 700; color: #16202F; transition: color 0.4s ease; }
+.login-form-sub { color: #5B6B85; font-size: 0.82rem; margin: 0 0 24px; transition: color 0.4s ease; }
+.login-form .field-label { color: #5B6B85; margin-top: 12px; display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; transition: color 0.4s ease; }
 .login-form input { width: 100%; padding: 11px 12px; border-radius: 9px; border: 1px solid #DCE3ED;
-  background: #F7F9FC; color: #16202F; font-size: 0.9rem; margin-bottom: 4px; }
+  background: #F7F9FC; color: #16202F; font-size: 0.9rem; margin-bottom: 4px; transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease; }
 .login-form input:focus { outline: 2px solid #2F6FED; outline-offset: 1px; border-color: #2F6FED; }
-.login-form .btn-primary { margin-top: 18px; padding: 12px; background: #2F6FED; }
+
+/* Interactive Sign In Button Component - Exact Blue Accent (#2F6FED) */
+.btn-interactive {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* Consistent gap between text and arrow icon */
+  background-color: #2F6FED !important;
+  color: #FFFFFF !important;
+  border: 2px solid #2F6FED !important;
+  border-radius: 9px;
+  padding: 12px 20px;
+  margin-top: 18px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(47, 111, 237, 0.35);
+  transition: background-color 400ms ease, color 400ms ease, border-color 400ms ease, fill 400ms ease, box-shadow 400ms ease;
+}
+.btn-interactive.full { width: 100%; }
+.btn-interactive:hover {
+  background-color: transparent !important;
+  color: #2F6FED !important;
+  border-color: #2F6FED !important;
+  box-shadow: none;
+}
+.btn-interactive .btn-arrow-icon {
+  fill: currentColor !important;
+  transition: fill 400ms ease, transform 400ms ease;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+.btn-interactive:hover .btn-arrow-icon {
+  fill: #2F6FED !important;
+  transform: translateX(3px);
+}
+
 .login-error { color: #D64545; font-size: 0.8rem; margin: 10px 0 0; }
 .login-divider { display: flex; align-items: center; gap: 12px; margin: 24px 0 16px; color: #95A2B8; font-size: 0.7rem; }
-.login-divider::before, .login-divider::after { content: ""; flex: 1; height: 1px; background: #E2E7F0; }
+.login-divider::before, .login-divider::after { content: ""; flex: 1; height: 1px; background: #E2E7F0; transition: background-color 0.4s ease; }
 .login-roles { display: flex; flex-direction: column; gap: 10px; }
 .role-card { text-align: left; background: #F7F9FC; border: 1px solid #DCE3ED; border-radius: 10px;
-  padding: 12px 14px; cursor: pointer; display: flex; flex-direction: column; gap: 3px; }
+  padding: 12px 14px; cursor: pointer; display: flex; flex-direction: column; gap: 3px; transition: background-color 0.4s ease, border-color 0.4s ease; }
 .role-card:hover { border-color: #2F6FED; background: #EDF3FF; }
-.role-name { color: #16202F; font-weight: 600; font-size: 0.85rem; }
-.role-desc { color: #5B6B85; font-size: 0.72rem; }
-.role-cred { color: #2F6FED; font-size: 0.7rem; margin-top: 3px; }
-.login-note { color: #95A2B8; font-size: 0.68rem; margin-top: 18px; line-height: 1.5; }
+.role-name { color: #16202F; font-weight: 600; font-size: 0.85rem; transition: color 0.4s ease; }
+.role-desc { color: #5B6B85; font-size: 0.72rem; transition: color 0.4s ease; }
+.role-cred { color: #2F6FED; font-size: 0.7rem; margin-top: 3px; transition: color 0.4s ease; }
+.login-note { color: #95A2B8; font-size: 0.68rem; margin-top: 18px; line-height: 1.5; transition: color 0.4s ease; }
+
+/* The switch - exact user provided styling */
+.switch {
+  display: block;
+  --width-of-switch: 3.5em;
+  --height-of-switch: 2em;
+  --size-of-icon: 1.4em;
+  --slider-offset: 0.3em;
+  position: relative;
+  width: var(--width-of-switch);
+  height: var(--height-of-switch);
+  cursor: pointer;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #f4f4f5;
+  transition: .4s;
+  border-radius: 30px;
+  border: 1px solid #DCE3ED;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: var(--size-of-icon,1.4em);
+  width: var(--size-of-icon,1.4em);
+  border-radius: 20px;
+  left: var(--slider-offset,0.3em);
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(40deg,#ff0080,#ff8c00 70%);
+  transition: .4s;
+}
+input:checked + .slider {
+  background-color: #303136;
+  border-color: #374A63;
+}
+input:checked + .slider:before {
+  left: calc(100% - (var(--size-of-icon,1.4em) + var(--slider-offset,0.3em)));
+  background: #303136;
+  box-shadow: inset -3px -2px 5px -2px #8983f7, inset -10px -4px 0 0 #a3dafb;
+}
+
+/* Dark theme overrides for login page */
+.login-page.dark .login-form-side { background: #16202F; color: #EEF2F8; }
+.login-page.dark .login-form h2 { color: #EEF2F8; }
+.login-page.dark .login-form-sub { color: #A9B8CC; }
+.login-page.dark .login-form .field-label { color: #A9B8CC; }
+.login-page.dark .login-form input { background: #27364C; border-color: #374A63; color: #EEF2F8; }
+.login-page.dark .login-form input:focus { border-color: #3E7BFA; outline-color: #3E7BFA; }
+.login-page.dark .login-divider { color: #7386A0; }
+.login-page.dark .login-divider::before, .login-page.dark .login-divider::after { background: #374A63; }
+.login-page.dark .role-card { background: #1F2C3F; border-color: #374A63; }
+.login-page.dark .role-card:hover { border-color: #3E7BFA; background: #27364C; }
+.login-page.dark .role-name { color: #EEF2F8; }
+.login-page.dark .role-desc { color: #A9B8CC; }
+.login-page.dark .role-cred { color: #3E7BFA; }
+.login-page.dark .login-note { color: #7386A0; }
+
+.login-page.dark .btn-interactive {
+  background-color: #3E7BFA !important;
+  border-color: #3E7BFA !important;
+}
+.login-page.dark .btn-interactive:hover {
+  background-color: transparent !important;
+  color: #3E7BFA !important;
+  border-color: #3E7BFA !important;
+}
+.login-page.dark .btn-interactive:hover .btn-arrow-icon {
+  fill: #3E7BFA !important;
+}
+
 @media (max-width: 900px) { .login-page { grid-template-columns: 1fr; } .login-pitch { display: none; } }
 
 .link-btn { background: none; border: none; color: var(--blue); font-size: 0.75rem; cursor: pointer; padding: 0; }
@@ -421,8 +546,216 @@ textarea { width: 100%; padding: 9px 10px; border-radius: 7px; border: 1px solid
 .reason-chips button:hover { border-color: var(--blue); color: var(--blue); }
 .reject-note { flex-direction: column; align-items: stretch; }
 
+/* ============================== Compact Loader ============================== */
+.compact-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  vertical-align: middle;
+}
+.loader-svg {
+  width: var(--loader-size, 22px);
+  height: var(--loader-size, 22px);
+  flex-shrink: 0;
+}
+.loader-track {
+  fill: none;
+  stroke: var(--border, rgba(255, 255, 255, 0.16));
+  stroke-width: 2;
+}
+.loader-ring {
+  fill: none;
+  stroke: var(--amber, #F59E0B);
+  stroke-width: 2;
+  stroke-linecap: round;
+  transform-origin: center;
+}
+.loader-ring-outer {
+  stroke-dasharray: 16 46;
+  animation: spinRing 1.4s linear infinite;
+}
+.loader-ring-mid {
+  stroke-dasharray: 12 28;
+  animation: spinRingReverse 1.1s linear infinite;
+}
+.loader-ring-inner {
+  stroke-dasharray: 6 12;
+  animation: spinRing 0.8s linear infinite;
+}
+@keyframes spinRing {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes spinRingReverse {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+.loader-text {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--amber, #F59E0B);
+}
+
+/* ============================== Admin Nav Tabs & Shared Sliding Indicator ============================== */
+.admin-nav-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+}
+
+.admin-nav-tab {
+  position: relative;
+  color: var(--ink-soft, #A9B8CC);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border-bottom: none !important;
+  cursor: pointer;
+  transition: color 200ms ease, background-color 200ms ease;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.admin-nav-tab:hover {
+  color: var(--ink, #EEF2F8);
+  background-color: var(--surface2, #27364C);
+}
+
+.admin-nav-tab.active {
+  color: var(--ink, #EEF2F8);
+  font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Shared Sliding Underline Indicator */
+.nav-sliding-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background-color: var(--blue, #3E7BFA);
+  border-radius: 2px 2px 0 0;
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1), width 280ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms ease;
+  pointer-events: none;
+  box-shadow: 0 0 8px rgba(62, 123, 250, 0.6);
+}
+
+/* ============================== Smooth Panel Content Transition ============================== */
+.admin-layout-fade {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  animation: adminPanelFade 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes adminPanelFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 /* ============================== Responsive (secondary target per Section 41) ============================== */
 @media (max-width: 1100px) {
   .admin-layout, .user-layout { grid-template-columns: 1fr; }
   .map-wrap { min-height: 320px; }
+}
+
+/* ============================== Floating Label Input Component ============================== */
+.floating-input-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.floating-input-field {
+  width: 100%;
+  padding: 16px 0 8px 0;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--ink, #152238);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border, #E2E7F0);
+  outline: none;
+  transition: border-color 300ms ease;
+  box-sizing: border-box;
+}
+
+.dark .floating-input-field {
+  color: var(--ink, #EEF2F8);
+}
+
+.floating-input-label {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft, #95A2B8);
+  pointer-events: none;
+  transition: transform 300ms ease, font-size 300ms ease, color 300ms ease;
+  transform-origin: left top;
+}
+
+.floating-input-group.focused .floating-input-label,
+.floating-input-group.filled .floating-input-label {
+  transform: translateY(-16px) scale(0.82);
+  color: var(--blue, #2F6FED);
+  font-weight: 600;
+}
+
+.floating-input-group:not(.focused):not(.filled) .floating-input-label {
+  color: var(--ink-soft, #95A2B8);
+}
+
+.floating-input-underline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--blue, #2F6FED);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  box-shadow: 0 0 6px rgba(47, 111, 237, 0.4);
+}
+
+.floating-input-group.focused .floating-input-underline {
+  transform: scaleX(1);
+}
+
+.floating-input-error {
+  font-size: 0.76rem;
+  color: var(--red, #D64545);
+  margin-top: 4px;
+}
+
+/* ============================== Skeleton Loading States ============================== */
+.skeleton {
+  background: var(--surface2, #E2E7F0);
+  border-radius: 6px;
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 0.65;
+  }
 }

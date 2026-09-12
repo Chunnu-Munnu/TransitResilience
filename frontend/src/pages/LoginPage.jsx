@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../state/authStore.jsx";
+import { useTheme } from "../state/themeStore.jsx";
+import Button from "../components/shared/Button";
+import ThemeToggle from "../components/shared/ThemeToggle";
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { isDark, setIsDark } = useTheme();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -21,8 +25,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      {/* Left: the pitch. Right: the form. */}
+    <div className={`login-page ${isDark ? "dark" : "light"}`}>
+      {/* Page-level top-right theme toggle switch */}
+      <div className="login-top-right-header">
+        <ThemeToggle isDark={isDark} onToggle={setIsDark} />
+      </div>
+
+      {/* Left: the pitch */}
       <section className="login-pitch">
         <div className="login-brand">
           <div className="logo" />
@@ -31,7 +40,7 @@ export default function LoginPage() {
 
         <h1>We don't report delays.<br />We predict them.</h1>
         <p className="login-sub">
-          Hazard-aware operations for the Mumbai Central Line — predicting disruption before it happens,
+          Hazard-aware operations for the Mumbai Central Line predicting disruption before it happens,
           tracing it across the network, and proposing a plan a human signs off on.
         </p>
 
@@ -51,6 +60,7 @@ export default function LoginPage() {
         </div>
       </section>
 
+      {/* Right: the form */}
       <section className="login-form-side">
         <form className="login-form" onSubmit={submit}>
           <h2>Sign in</h2>
@@ -64,25 +74,25 @@ export default function LoginPage() {
 
           {error && <p className="login-error">{error}</p>}
 
-          <button className="btn-primary full" type="submit">Sign In</button>
+          <Button full type="submit" className="login-submit-btn">Sign In</Button>
 
           <div className="login-divider"><span>or open a demo account</span></div>
 
           <div className="login-roles">
             <button type="button" className="role-card" onClick={() => quickFill("user")}>
               <span className="role-name">Passenger</span>
-              <span className="role-desc">Track one journey, get live reroute alerts</span>
-              <span className="role-cred mono">user / user</span>
+              <span className="role-desc"></span>
+              <span className="role-cred mono">user</span>
             </button>
             <button type="button" className="role-card" onClick={() => quickFill("admin")}>
               <span className="role-name">Operator</span>
-              <span className="role-desc">Full control room — approve or reject AI plans</span>
-              <span className="role-cred mono">admin / admin</span>
+              <span className="role-desc"></span>
+              <span className="role-cred mono">admin</span>
             </button>
           </div>
 
           <p className="login-note">
-            Demo credentials only — this is role selection for a prototype, not real authentication.
+            
           </p>
         </form>
       </section>
