@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+websockets
+python-multipart
+networkx
+pandas
+numpy
+scikit-learn
+xgboost
+ortools

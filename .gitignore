@@ -1,0 +1,49 @@
+# ============================================================
+# This is the canonical project going forward.
+# The old exploratory folder (../TransitResilience) and the loose
+# pptx/spec files one level up are prior drafts — not tracked here.
+# ============================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Env / secrets
+.env
+.env.*
+*.local
+
+# Data — raw/large/generated (kept locally, never committed)
+data/raw/
+data/processed/master/
+data/synthetic/*.json
+!data/synthetic/.gitkeep
+
+# Model artifacts
+*.pkl
+*.joblib
+*.model
+*.bin
+ml/eta_model/artifacts/
+
+# Node / frontend build output
+node_modules/
+dist/
+build/
+.cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Editors / OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

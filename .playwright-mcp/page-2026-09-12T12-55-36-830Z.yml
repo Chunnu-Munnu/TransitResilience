@@ -1,0 +1,36 @@
+- generic [ref=e46]:
+  - heading "Where are you travelling?" [level=2] [ref=e47]
+  - paragraph [ref=e48]: We'll track only this journey and alert you if anything changes on it.
+  - generic [ref=e49]: Boarding at
+  - combobox [ref=e50]:
+    - option "Mumbai CST" [selected]
+    - option "Byculla"
+    - option "Dadar"
+    - option "Kurla"
+    - option "Ghatkopar"
+    - option "Vikhroli"
+    - option "Bhandup"
+    - option "Nahur"
+    - option "Mulund"
+    - option "Thane"
+    - option "Mumbra"
+    - option "Diva"
+    - option "Dombivli"
+    - option "Kalyan Jn"
+  - generic [ref=e51]: Going to
+  - combobox [ref=e52]:
+    - option "Mumbai CST"
+    - option "Byculla"
+    - option "Dadar"
+    - option "Kurla"
+    - option "Ghatkopar"
+    - option "Vikhroli"
+    - option "Bhandup"
+    - option "Nahur"
+    - option "Mulund"
+    - option "Thane"
+    - option "Mumbra"
+    - option "Diva"
+    - option "Dombivli"
+    - option "Kalyan Jn" [selected]
+  - button "Find my train" [ref=e53] [cursor=pointer]

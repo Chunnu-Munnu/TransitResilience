@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TransitResilience</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{
+  --bg:#F3F5F9; --surface:#FFFFFF; --surface2:#F7F9FC; --border:#E2E7F0;
+  --navy:#12233F; --ink:#152238; --ink-soft:#5B6B85; --ink-dim:#95A2B8;
+  --blue:#2F6FED; --blue-soft:#E9F0FF;
+  --green:#1E9E5A; --green-soft:#E7F8EE;
+  --amber:#C97A0B; --amber-soft:#FDF1DF;
+  --red:#D64545; --red-soft:#FBE9E9;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+
+header{background:var(--navy);color:#fff;padding:0 24px;height:64px;display:flex;align-items:center;gap:28px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand .logo{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#2F6FED,#7AA6FF);flex-shrink:0;}
+.brand .name{font-weight:700;font-size:1rem;line-height:1.1;}
+.brand .sub{font-size:0.68rem;color:#9FB2D0;}
+nav{display:flex;gap:22px;flex:1;}
+nav a{color:#C6D3EA;text-decoration:none;font-size:0.85rem;font-weight:500;padding:8px 0;border-bottom:2px solid transparent;}
+nav a.active{color:#fff;border-color:var(--blue);}
+.clock{font-size:0.8rem;color:#B9C6DE;}
+
+.layout{display:grid;grid-template-columns:280px 1fr 320px;gap:16px;padding:16px;max-width:1400px;margin:0 auto;}
+.col{display:flex;flex-direction:column;gap:16px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:0 1px 2px rgba(20,30,50,0.04);}
+.card h2{font-size:0.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin:0 0 12px;font-weight:600;}
+
+.net-status{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.net-status .dot{width:10px;height:10px;border-radius:50%;background:var(--green);}
+.net-status .label{font-weight:700;font-size:1rem;}
+.net-sub{font-size:0.8rem;color:var(--ink-soft);margin-bottom:14px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.stat-tile{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;}
+.stat-tile .n{font-size:1.25rem;font-weight:700;}
+.stat-tile .l{font-size:0.63rem;color:var(--ink-soft);margin-top:2px;}
+.stat-tile.warn .n{color:var(--amber);}
+.stat-tile.risk .n{color:var(--red);}
+
+.train-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:0.82rem;}
+.train-row:last-child{border-bottom:none;}
+.train-icon{width:26px;height:26px;border-radius:7px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;flex-shrink:0;}
+.train-meta .id{font-weight:600;}
+.train-meta .route{color:var(--ink-soft);font-size:0.72rem;}
+.pill{font-size:0.66rem;padding:3px 9px;border-radius:20px;font-weight:600;white-space:nowrap;margin-left:auto;}
+.pill.on_time{background:var(--green-soft);color:var(--green);}
+.pill.delayed{background:var(--amber-soft);color:var(--amber);}
+.pill.at_risk{background:var(--red-soft);color:var(--red);}
+
+.map-wrap{position:relative;height:520px;}
+#map{border-radius:14px;border:1px solid var(--border);height:100%;}
+.legend{position:absolute;bottom:14px;right:14px;background:#fff;border:1px solid var(--border);border-radius:9px;padding:10px 12px;font-size:0.7rem;color:var(--ink-soft);z-index:1000;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.legend div{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
+.legend div:last-child{margin-bottom:0;}
+.legend .sw{width:14px;height:3px;border-radius:2px;}
+
+.hero{background:linear-gradient(135deg,#12233F,#1E3A66);border-radius:14px;padding:20px;color:#fff;}
+.hero h3{margin:0 0 6px;font-size:1rem;line-height:1.35;font-weight:700;}
+.hero p{margin:0;font-size:0.78rem;color:#B9C6DE;}
+
+.alert-row{display:flex;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);}
+.alert-row:last-child{border-bottom:none;}
+.alert-icon{width:20px;height:20px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.68rem;margin-top:1px;font-weight:700;}
+.alert-icon.high{background:var(--red-soft);color:var(--red);}
+.alert-icon.mid{background:var(--amber-soft);color:var(--amber);}
+.alert-title{font-size:0.8rem;font-weight:600;}
+.alert-sub{font-size:0.72rem;color:var(--ink-soft);}
+
+select{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:var(--surface2);color:var(--ink);font-size:0.85rem;margin-bottom:10px;}
+.btn{width:100%;padding:11px;border-radius:9px;border:none;font-weight:700;font-size:0.85rem;cursor:pointer;}
+.btn-primary{background:var(--blue);color:#fff;}
+
+.trip-card{border-left:4px solid var(--blue);}
+.trip-card.updated{border-left-color:var(--amber);}
+.trip-row{display:flex;justify-content:space-between;font-size:0.85rem;padding:6px 0;}
+.trip-row span:first-child{color:var(--ink-soft);}
+.trip-reason{font-size:0.78rem;color:var(--ink-soft);margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo"></div>
+    <div><div class="name">TransitResilience</div><div class="sub">Safer Journeys. Stronger Tomorrow.</div></div>
+  </div>
+  <nav><a class="active">Live Trains</a><a>Journey Info</a></nav>
+  <span class="clock mono" id="clock">--:--</span>
+</header>
+
+<div class="layout">
+
+  <div class="col">
+    <div class="card">
+      <h2>Network Status</h2>
+      <div class="net-status"><span class="dot" id="netDot"></span><span class="label" id="netLabel">Mostly Normal</span></div>
+      <div class="net-sub" id="netSub">Live network conditions</div>
+      <div class="stat-grid">
+        <div class="stat-tile"><div class="n" id="statRunning">—</div><div class="l">Running</div></div>
+        <div class="stat-tile warn"><div class="n" id="statDelayed">—</div><div class="l">Delayed</div></div>
+        <div class="stat-tile risk"><div class="n" id="statRisk">—</div><div class="l">At Risk</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="flex:1;">
+      <h2>Live Train Updates</h2>
+      <div id="trainList"></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="map-wrap">
+      <div id="map"></div>
+      <div class="legend">
+        <div><span class="sw" style="background:#1E9E5A"></span>Normal track</div>
+        <div><span class="sw" style="background:#C97A0B"></span>Elevated risk</div>
+        <div><span class="sw" style="background:#D64545"></span>High risk</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="hero">
+      <h3>We keep you moving, even in tough times.</h3>
+      <p>Live disruption prediction across the Central Line corridor.</p>
+    </div>
+
+    <div class="card">
+      <h2>Active Alerts</h2>
+      <div id="alertsList"><p style="color:var(--ink-soft);font-size:0.82rem;">No active alerts.</p></div>
+    </div>
+
+    <div class="card">
+      <h2>Plan Your Journey</h2>
+      <select id="origin"></select>
+      <select id="destination"></select>
+      <button class="btn btn-primary" id="planBtn">Check Live Route</button>
+    </div>
+
+    <div class="card trip-card" id="tripCard" style="display:none;">
+      <h2>My Trip</h2>
+      <div class="trip-row"><span>Train</span><span id="tTrain">—</span></div>
+      <div class="trip-row"><span>Route</span><span id="tRoute">Rail (unchanged)</span></div>
+      <div class="trip-row"><span>ETA delay</span><span id="tDelay">on time</span></div>
+      <div class="trip-row"><span>Active from</span><span id="tEffective">—</span></div>
+      <div class="trip-reason" id="tReason" style="display:none;"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const map = L.map('map', {zoomControl:true, attributionControl:false}).setView([19.08, 72.93], 11);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {maxZoom:17}).addTo(map);
+
+let state = null, myTrainId = null, ws = null;
+let segmentLines = {}, trainMarkers = {}, stationByCode = {};
+
+function riskColor(r){ return r >= 0.5 ? '#D64545' : r >= 0.2 ? '#C97A0B' : '#1E9E5A'; }
+
+function renderStatic(){
+  stationByCode = Object.fromEntries(state.stations.map(s => [s.code, s]));
+  state.stations.forEach(s => {
+    L.circleMarker([s.lat, s.lon], {radius:4, color:'#95A2B8', fillColor:'#fff', fillOpacity:1, weight:2}).bindTooltip(s.name).addTo(map);
+  });
+  const opts = state.stations.map(s => `<option value="${s.code}">${s.name}</option>`).join('');
+  document.getElementById('origin').innerHTML = opts;
+  document.getElementById('destination').innerHTML = opts;
+  document.getElementById('destination').selectedIndex = state.stations.length - 1;
+}
+
+function renderDynamic(){
+  const h = String(Math.floor(state.clock_min/60)%24).padStart(2,'0');
+  const m = String(state.clock_min%60).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}`;
+
+  state.segments.forEach(seg => {
+    const a = stationByCode[seg.from], b = stationByCode[seg.to];
+    const color = riskColor(seg.flood_risk);
+    if (segmentLines[seg.id]) segmentLines[seg.id].setStyle({color});
+    else segmentLines[seg.id] = L.polyline([[a.lat,a.lon],[b.lat,b.lon]], {color, weight:5, opacity:0.85}).addTo(map);
+  });
+
+  let atRisk=0, delayed=0;
+  state.trains.forEach(t => {
+    if (t.status==='at_risk') atRisk++; else if (t.status==='delayed') delayed++;
+    const seg = state.segments[Math.min(t.current_segment_index, state.segments.length-1)];
+    const a = stationByCode[seg.from], b = stationByCode[seg.to];
+    const p = t.progress_in_segment;
+    const lat = a.lat+(b.lat-a.lat)*p, lon = a.lon+(b.lon-a.lon)*p;
+    const color = t.status==='at_risk'?'#D64545':t.status==='delayed'?'#C97A0B':'#1E9E5A';
+    if (trainMarkers[t.id]) { trainMarkers[t.id].setLatLng([lat,lon]); trainMarkers[t.id].setStyle({fillColor:color}); }
+    else trainMarkers[t.id] = L.circleMarker([lat,lon], {radius:6,color:'#fff',fillColor:color,fillOpacity:1,weight:1.5}).addTo(map);
+    trainMarkers[t.id].bindTooltip(`${t.id} · ${t.status.replace('_',' ')}`);
+  });
+
+  document.getElementById('statRunning').textContent = state.trains.length;
+  document.getElementById('statDelayed').textContent = delayed;
+  document.getElementById('statRisk').textContent = atRisk;
+
+  const netDot = document.getElementById('netDot'), netLabel = document.getElementById('netLabel'), netSub = document.getElementById('netSub');
+  if (atRisk > 0) { netDot.style.background='#D64545'; netLabel.textContent='Disruption Active'; netLabel.style.color='#D64545'; netSub.textContent = `${atRisk} train(s) flagged for predicted delay`; }
+  else if (delayed > 0) { netDot.style.background='#C97A0B'; netLabel.textContent='Minor Delays'; netLabel.style.color='#C97A0B'; netSub.textContent = `${delayed} train(s) running behind schedule`; }
+  else { netDot.style.background='#1E9E5A'; netLabel.textContent='Mostly Normal'; netLabel.style.color='#1E9E5A'; netSub.textContent = 'All services on schedule'; }
+
+  document.getElementById('trainList').innerHTML = state.trains.slice(0,8).map(t => `
+    <div class="train-row">
+      <div class="train-icon">${t.id.slice(1)}</div>
+      <div class="train-meta"><div class="id">${t.id}</div><div class="route">${t.departure_station} → ${t.terminus_station}</div></div>
+      <span class="pill ${t.status}">${t.status==='at_risk'?'At Risk':t.status==='delayed'?`+${t.delay_min}m`:'On Time'}</span>
+    </div>`).join('');
+
+  fetch('/api/candidates').then(r=>r.json()).then(cands => {
+    const pending = cands.filter(c => c.status === 'pending');
+    const box = document.getElementById('alertsList');
+    if (!pending.length) { box.innerHTML = '<p style="color:var(--ink-soft);font-size:0.82rem;">No active alerts.</p>'; return; }
+    box.innerHTML = pending.slice(0,4).map(c => `
+      <div class="alert-row">
+        <div class="alert-icon ${c.tier==='senior'?'high':'mid'}">!</div>
+        <div><div class="alert-title">${c.rider_explanation}</div><div class="alert-sub">Affecting ${c.train_id}</div></div>
+      </div>`).join('');
+  });
+}
+
+document.getElementById('planBtn').addEventListener('click', () => {
+  const origin = document.getElementById('origin').value, destination = document.getElementById('destination').value;
+  fetch('/api/trip/plan', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({origin, destination})})
+    .then(r=>r.json()).then(res => {
+      if (!res.ok) { alert(res.error); return; }
+      myTrainId = res.train_id;
+      document.getElementById('tripCard').style.display = 'block';
+      document.getElementById('tTrain').textContent = `${res.train_id} (${res.service_type})`;
+      document.getElementById('tDelay').textContent = res.current_delay_min > 0 ? `+${res.current_delay_min} min` : 'on time';
+      followTrip(res.train_id);
+    });
+});
+
+function followTrip(trainId){
+  if (ws) ws.close();
+  ws = new WebSocket(`ws://${location.host}/ws/rider/${trainId}`);
+  ws.onmessage = (ev) => {
+    const msg = JSON.parse(ev.data);
+    const card = document.getElementById('tripCard');
+    card.classList.add('updated');
+    document.getElementById('tRoute').textContent = msg.route_note;
+    document.getElementById('tDelay').textContent = msg.new_eta_delay_min ? `+${msg.new_eta_delay_min} min` : 'adjusted';
+    const h = String(Math.floor(msg.effective_from_min/60)%24).padStart(2,'0');
+    const m = String(msg.effective_from_min%60).padStart(2,'0');
+    document.getElementById('tEffective').textContent = `${h}:${m}`;
+    const r = document.getElementById('tReason');
+    r.style.display = 'block'; r.textContent = 'Why: ' + msg.reason;
+  };
+}
+
+const adminWs = new WebSocket(`ws://${location.host}/ws/admin`);
+adminWs.onmessage = (ev) => {
+  const msg = JSON.parse(ev.data);
+  if (msg.type === 'sim_tick') { const first = state===null; state = msg; if (first) renderStatic(); renderDynamic(); }
+};
+</script>
+</body>
+</html>
