@@ -189,6 +189,7 @@ async def reset_operations():
         "clock_min": snap["clock_min"], "paused": snap["paused"], "speed_multiplier": snap["speed_multiplier"],
         "timezone": snap["timezone"], "timezone_label": snap["timezone_label"],
         "trains": snap["trains"], "segments": snap["segments"], "manual_events": snap["manual_events"],
+        "complaints": snap["complaints"],
         "recommendations": [], "metrics": {},
     })
     return {"ok": True, "state": snap}
@@ -245,3 +246,35 @@ def audit():
 def clear_audit():
     _world.approvals.audit_log.clear()
     return {"ok": True}
+
+
+# ---------------------------------------------------------------- rider complaints (photo reports)
+class ComplaintIn(BaseModel):
+    cause: str  # tree_fall | road_blockage | accident | other
+    description: str = ""
+    location: str = ""
+    image_data_url: str  # data: URI, e.g. "data:image/jpeg;base64,..."
+    segment_id: str | None = None
+    train_id: str | None = None
+
+
+@router.post("/api/complaints")
+def submit_complaint(body: ComplaintIn):
+    complaint = _world.submit_complaint(
+        cause=body.cause, description=body.description, location=body.location,
+        image_data_url=body.image_data_url, segment_id=body.segment_id, train_id=body.train_id,
+    )
+    return {"ok": True, "complaint": complaint}
+
+
+@router.get("/api/complaints")
+def list_complaints():
+    return _world.complaints
+
+
+@router.post("/api/complaints/{complaint_id}/notify")
+def notify_complaint(complaint_id: int):
+    complaint = _world.notify_complaint(complaint_id)
+    if not complaint:
+        raise HTTPException(404, "complaint not found or already notified")
+    return {"ok": True, "complaint": complaint}

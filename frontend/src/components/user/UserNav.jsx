@@ -4,6 +4,7 @@ const PASSENGER_TABS = [
   { id: "my_trip", label: "My Trip" },
   { id: "live_journey", label: "Live Journey" },
   { id: "service_alerts", label: "Service Alerts" },
+  { id: "report_issue", label: "Report Issue" },
 ];
 
 /**

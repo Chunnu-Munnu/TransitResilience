@@ -44,8 +44,11 @@ AUTHORITY_BY_CAUSE = {
     "accident": "Railway Protection Force",
     "flooding": "State Disaster Management Authority",
     "landslide": "State Disaster Management Authority",
+    "road_blockage": "Traffic Police & Municipal Roads Department",
 }
+DEFAULT_COMPLAINT_AUTHORITY = "Railway Control Room"
 SEVERITY_REROUTE_THRESHOLD = 0.5  # at/above this, a bus reroute is allocated, not just a hold
+MAX_COMPLAINTS = 100  # rider photo reports keep only the most recent 100, same cap as the decision log
 # How a manually-blocked segment's cause should read in an explanation --
 # "flood risk" is only ever accurate when rain is actually the cause.
 CAUSE_RISK_PHRASE = {
@@ -93,6 +96,8 @@ class World:
         self.blocked_segments: dict[str, dict] = {}  # segment_id -> {kind, severity, note, since_min}
         self.road_blocked_segments: set[str] = set()  # roads unusable => no bus diversion there
         self._plan_counter = 0
+        self.complaints: list[dict] = []  # rider photo reports of a blockage they can see, awaiting operator action
+        self._complaint_counter = 0
 
         self.segments_by_id = {}
         self.stations_by_code = {}
@@ -197,6 +202,7 @@ class World:
         await self.connections.broadcast_operations("SIMULATION_UPDATED", {
             "clock_min": self.clock_min, "paused": self.paused, "speed_multiplier": self.speed_multiplier,
             "trains": snap["trains"], "segments": snap["segments"], "manual_events": snap["manual_events"],
+            "complaints": snap["complaints"],
         })
 
     def _advance_train(self, train: dict, move: bool = True):
@@ -571,6 +577,7 @@ class World:
             "chargers": self.chargers,
             "shuttle": self.shuttle,
             "manual_events": self.manual_events,
+            "complaints": self.complaints,
         }
 
     def set_rainfall(self, mm: float, line_id: str = "central_main"):
@@ -678,6 +685,49 @@ class World:
                     "type": "maintenance", "location": seg_id, "timestamp": time.time(),
                     "text": f"{seg_id.replace('_', ' to ')} reopened (blockage cleared)",
                 })
+
+    # -------------------------------------------------------------- rider complaints (photo reports)
+    def submit_complaint(self, cause: str, description: str, location: str,
+                          image_data_url: str, segment_id: str | None = None,
+                          train_id: str | None = None) -> dict:
+        """A rider reporting what they can see (a fallen tree, a car on the
+        track, a blocked road) with a photo. This is deliberately a SEPARATE
+        inbox from the admin-triggered block_segment workflow -- a complaint
+        is a claim from a passenger, not yet an operator-confirmed closure,
+        so it sits for review rather than immediately raising rail risk."""
+        self._complaint_counter += 1
+        complaint = {
+            "id": self._complaint_counter,
+            "cause": cause,
+            "description": description,
+            "location": location,
+            "segment_id": segment_id,
+            "train_id": train_id,
+            "image_data_url": image_data_url,
+            "authority": AUTHORITY_BY_CAUSE.get(cause, DEFAULT_COMPLAINT_AUTHORITY),
+            "status": "new",  # new -> notified
+            "submitted_at": time.time(),
+            "notified_at": None,
+        }
+        self.complaints.append(complaint)
+        if len(self.complaints) > MAX_COMPLAINTS:
+            self.complaints = self.complaints[-MAX_COMPLAINTS:]
+        return complaint
+
+    def notify_complaint(self, complaint_id: int) -> dict | None:
+        complaint = next((c for c in self.complaints if c["id"] == complaint_id), None)
+        if not complaint or complaint["status"] == "notified":
+            return None
+        complaint["status"] = "notified"
+        complaint["notified_at"] = time.time()
+        # Same event schema every other notification in this system uses --
+        # it shows up in the operator's Active Events feed like any other alert.
+        self.manual_events.append({
+            "type": "authority_alert", "authority": complaint["authority"], "cause": complaint["cause"],
+            "location": complaint["location"], "timestamp": time.time(),
+            "text": f"{complaint['authority']} notified of rider report — {complaint['cause'].replace('_', ' ')} at {complaint['location']}.",
+        })
+        return complaint
 
 
 async def run_forever(world: World):

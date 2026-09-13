@@ -1,0 +1,231 @@
+{
+  "buses": [
+    {
+      "id": "BUS_01",
+      "type": "EV",
+      "depot_code": "CLA",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_02",
+      "type": "diesel",
+      "depot_code": "NHU",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_03",
+      "type": "EV",
+      "depot_code": "DIVA",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_04",
+      "type": "diesel",
+      "depot_code": "CLA",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_05",
+      "type": "EV",
+      "depot_code": "NHU",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_06",
+      "type": "diesel",
+      "depot_code": "DIVA",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_07",
+      "type": "EV",
+      "depot_code": "KYN",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_08",
+      "type": "diesel",
+      "depot_code": "KYN",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_09",
+      "type": "EV",
+      "depot_code": "BVI",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_10",
+      "type": "diesel",
+      "depot_code": "BVI",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_11",
+      "type": "EV",
+      "depot_code": "KSRA",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_12",
+      "type": "diesel",
+      "depot_code": "KSRA",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_13",
+      "type": "EV",
+      "depot_code": "KJT",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_14",
+      "type": "diesel",
+      "depot_code": "KJT",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_15",
+      "type": "EV",
+      "depot_code": "PNVL",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_16",
+      "type": "diesel",
+      "depot_code": "PNVL",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_17",
+      "type": "EV",
+      "depot_code": "CCG",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    },
+    {
+      "id": "BUS_18",
+      "type": "diesel",
+      "depot_code": "CCG",
+      "capacity": 45,
+      "current_load": 0,
+      "assigned_route": null,
+      "driver_on_shift": true
+    }
+  ],
+  "chargers": [
+    {
+      "id": "CHG_01",
+      "station_code": "CLA",
+      "bays": 4,
+      "occupied_bays": 0,
+      "charge_rate_kw": 60
+    },
+    {
+      "id": "CHG_02",
+      "station_code": "NHU",
+      "bays": 4,
+      "occupied_bays": 2,
+      "charge_rate_kw": 60
+    },
+    {
+      "id": "CHG_03",
+      "station_code": "DIVA",
+      "bays": 4,
+      "occupied_bays": 0,
+      "charge_rate_kw": 60
+    },
+    {
+      "id": "CHG_04",
+      "station_code": "KYN",
+      "bays": 4,
+      "occupied_bays": 0,
+      "charge_rate_kw": 60
+    },
+    {
+      "id": "CHG_05",
+      "station_code": "BVI",
+      "bays": 4,
+      "occupied_bays": 0,
+      "charge_rate_kw": 60
+    },
+    {
+      "id": "CHG_06",
+      "station_code": "KSRA",
+      "bays": 4,
+      "occupied_bays": 0,
+      "charge_rate_kw": 60
+    },
+    {
+      "id": "CHG_07",
+      "station_code": "KJT",
+      "bays": 4,
+      "occupied_bays": 0,
+      "charge_rate_kw": 60
+    },
+    {
+      "id": "CHG_08",
+      "station_code": "PNVL",
+      "bays": 4,
+      "occupied_bays": 0,
+      "charge_rate_kw": 60
+    },
+    {
+      "id": "CHG_09",
+      "station_code": "CCG",
+      "bays": 4,
+      "occupied_bays": 0,
+      "charge_rate_kw": 60
+    }
+  ]
+}

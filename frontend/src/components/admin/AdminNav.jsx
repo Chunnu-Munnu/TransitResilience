@@ -5,6 +5,7 @@ const TABS = [
   { id: "operations", label: "Operations", path: "/admin" },
   { id: "review", label: "Review Queue", path: "/admin/review" },
   { id: "scenario", label: "Scenario Control", path: "/admin/scenario" },
+  { id: "complaints", label: "User Complaints", path: "/admin/complaints" },
   { id: "decisions", label: "Decision Log", path: "/admin/decisions" },
 ];
 

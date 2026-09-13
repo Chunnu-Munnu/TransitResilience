@@ -13,6 +13,7 @@ import DelayAlertsPanel from "../components/user/DelayAlertsPanel";
 import ServiceAlerts from "../components/user/ServiceAlerts";
 import LiveTrainList from "../components/user/LiveTrainList";
 import LiveJourneyView from "../components/user/LiveJourneyView";
+import ReportIssuePanel from "../components/user/ReportIssuePanel";
 import { SkeletonCard, SkeletonList, SkeletonBox } from "../components/shared/Skeleton";
 
 export default function UserDashboard() {
@@ -132,6 +133,8 @@ export default function UserDashboard() {
           <ServiceAlerts recommendations={recommendations} clockMin={clockMin} />
         ) : activeTab === "live_journey" ? (
           <LiveJourneyView train={myTrain || trains[0]} hazards={hazards} clockMin={clockMin} />
+        ) : activeTab === "report_issue" ? (
+          <ReportIssuePanel trainId={myTrip?.trainId} />
         ) : (
           <>
             {activeAlertsCount > 0 && (

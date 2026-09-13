@@ -88,4 +88,16 @@ export const api = {
 
   getAudit: () => request("/api/audit"),
   clearAudit: () => request("/api/audit/clear", { method: "POST" }),
+
+  submitComplaint: ({ cause, description, location, imageDataUrl, segmentId, trainId }) =>
+    request("/api/complaints", {
+      method: "POST",
+      body: JSON.stringify({
+        cause, description, location,
+        image_data_url: imageDataUrl,
+        segment_id: segmentId || null,
+        train_id: trainId || null,
+      }),
+    }),
+  notifyComplaint: (id) => request(`/api/complaints/${id}/notify`, { method: "POST" }),
 };

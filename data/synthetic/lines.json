@@ -1,0 +1,138 @@
+{
+  "lines": [
+    {
+      "id": "central_main",
+      "name": "Central Main (CST ↔ Kalyan)",
+      "color": "#1E9E5A",
+      "stations": [
+        {"order": 1, "code": "CSTM", "name": "Mumbai CST", "lat": 18.944481, "lon": 72.836903, "monsoon_risk": "low", "platforms": 4, "diversion_platform": 2, "bus_bay_walk_m": 145},
+        {"order": 2, "code": "BY", "name": "Byculla", "lat": 18.97695, "lon": 72.833211, "monsoon_risk": "medium", "platforms": 2, "diversion_platform": 3, "bus_bay_walk_m": 170},
+        {"order": 3, "code": "DR", "name": "Mumbai Dadar Central", "lat": 19.017179, "lon": 72.842972, "monsoon_risk": "high", "platforms": 2, "diversion_platform": 4, "bus_bay_walk_m": 195},
+        {"order": 4, "code": "CLA", "name": "Kurla Jn", "lat": 19.065221, "lon": 72.879375, "monsoon_risk": "high", "platforms": 4, "diversion_platform": 1, "bus_bay_walk_m": 220},
+        {"order": 5, "code": "GC", "name": "Ghatkopar", "lat": 19.085985, "lon": 72.908591, "monsoon_risk": "medium", "platforms": 2, "diversion_platform": 2, "bus_bay_walk_m": 245},
+        {"order": 6, "code": "VK", "name": "Vikhroli", "lat": 19.11196, "lon": 72.928312, "monsoon_risk": "medium", "platforms": 2, "diversion_platform": 3, "bus_bay_walk_m": 270},
+        {"order": 7, "code": "BND", "name": "Bhandup", "lat": 19.14201, "lon": 72.937235, "monsoon_risk": "medium", "platforms": 2, "diversion_platform": 4, "bus_bay_walk_m": 295},
+        {"order": 8, "code": "NHU", "name": "Nahur", "lat": 19.154646, "lon": 72.946683, "monsoon_risk": "low", "platforms": 2, "diversion_platform": 1, "bus_bay_walk_m": 320},
+        {"order": 9, "code": "MLND", "name": "Mulund", "lat": 19.172355, "lon": 72.956933, "monsoon_risk": "low", "platforms": 2, "diversion_platform": 2, "bus_bay_walk_m": 345},
+        {"order": 10, "code": "TNA", "name": "Thane", "lat": 19.185757, "lon": 72.975417, "monsoon_risk": "high", "platforms": 4, "diversion_platform": 3, "bus_bay_walk_m": 370},
+        {"order": 11, "code": "MBQ", "name": "Mumbra", "lat": 19.190223, "lon": 73.02326, "monsoon_risk": "high", "platforms": 2, "diversion_platform": 4, "bus_bay_walk_m": 135},
+        {"order": 12, "code": "DIVA", "name": "Diva", "lat": 19.188394, "lon": 73.041905, "monsoon_risk": "high", "platforms": 2, "diversion_platform": 1, "bus_bay_walk_m": 160},
+        {"order": 13, "code": "DI", "name": "Dombivli", "lat": 19.218218, "lon": 73.0869, "monsoon_risk": "medium", "platforms": 2, "diversion_platform": 2, "bus_bay_walk_m": 185},
+        {"order": 14, "code": "KYN", "name": "Kalyan Jn", "lat": 19.234716, "lon": 73.12974, "monsoon_risk": "medium", "platforms": 4, "diversion_platform": 3, "bus_bay_walk_m": 210}
+      ],
+      "segments": [
+        {"id": "CSTM_BY", "from": "CSTM", "to": "BY", "distance_km": 3.63, "base_risk": 0.08, "line_id": "central_main"},
+        {"id": "BY_DR", "from": "BY", "to": "DR", "distance_km": 4.59, "base_risk": 0.15, "line_id": "central_main"},
+        {"id": "DR_CLA", "from": "DR", "to": "CLA", "distance_km": 6.57, "base_risk": 0.15, "line_id": "central_main"},
+        {"id": "CLA_GC", "from": "CLA", "to": "GC", "distance_km": 3.84, "base_risk": 0.15, "line_id": "central_main"},
+        {"id": "GC_VK", "from": "GC", "to": "VK", "distance_km": 3.55, "base_risk": 0.08, "line_id": "central_main"},
+        {"id": "VK_BND", "from": "VK", "to": "BND", "distance_km": 3.47, "base_risk": 0.08, "line_id": "central_main"},
+        {"id": "BND_NHU", "from": "BND", "to": "NHU", "distance_km": 1.72, "base_risk": 0.08, "line_id": "central_main"},
+        {"id": "NHU_MLND", "from": "NHU", "to": "MLND", "distance_km": 2.24, "base_risk": 0.03, "line_id": "central_main"},
+        {"id": "MLND_TNA", "from": "MLND", "to": "TNA", "distance_km": 2.45, "base_risk": 0.15, "line_id": "central_main"},
+        {"id": "TNA_MBQ", "from": "TNA", "to": "MBQ", "distance_km": 5.05, "base_risk": 0.15, "line_id": "central_main"},
+        {"id": "MBQ_DIVA", "from": "MBQ", "to": "DIVA", "distance_km": 1.97, "base_risk": 0.15, "line_id": "central_main"},
+        {"id": "DIVA_DI", "from": "DIVA", "to": "DI", "distance_km": 5.77, "base_risk": 0.15, "line_id": "central_main"},
+        {"id": "DI_KYN", "from": "DI", "to": "KYN", "distance_km": 4.86, "base_risk": 0.08, "line_id": "central_main"}
+      ]
+    },
+    {
+      "id": "central_kasara",
+      "name": "Central – Kasara Branch",
+      "color": "#3B82F6",
+      "stations": [
+        {"order": 1, "code": "KYN", "name": "Kalyan Jn", "lat": 19.234716, "lon": 73.12974, "monsoon_risk": "medium", "platforms": 4, "diversion_platform": 3, "bus_bay_walk_m": 210},
+        {"order": 2, "code": "TIT", "name": "Titwala", "lat": 19.2971, "lon": 73.2075, "monsoon_risk": "medium", "platforms": 2, "diversion_platform": 1, "bus_bay_walk_m": 180},
+        {"order": 3, "code": "KDV", "name": "Khadavli", "lat": 19.3387, "lon": 73.2255, "monsoon_risk": "high", "platforms": 2, "diversion_platform": 2, "bus_bay_walk_m": 200},
+        {"order": 4, "code": "VSD", "name": "Vasind", "lat": 19.4056, "lon": 73.2645, "monsoon_risk": "high", "platforms": 2, "diversion_platform": 1, "bus_bay_walk_m": 210},
+        {"order": 5, "code": "ASO", "name": "Asangaon", "lat": 19.4796, "lon": 73.2977, "monsoon_risk": "high", "platforms": 2, "diversion_platform": 2, "bus_bay_walk_m": 225},
+        {"order": 6, "code": "ATG", "name": "Atgaon", "lat": 19.5259, "lon": 73.3376, "monsoon_risk": "high", "platforms": 2, "diversion_platform": 1, "bus_bay_walk_m": 190},
+        {"order": 7, "code": "KDI", "name": "Khardi", "lat": 19.5921, "lon": 73.3853, "monsoon_risk": "high", "platforms": 2, "diversion_platform": 2, "bus_bay_walk_m": 205},
+        {"order": 8, "code": "KSRA", "name": "Kasara", "lat": 19.6136, "lon": 73.4272, "monsoon_risk": "high", "platforms": 3, "diversion_platform": 1, "bus_bay_walk_m": 230}
+      ],
+      "segments": [
+        {"id": "central_kasara_KYN_TIT", "from": "KYN", "to": "TIT", "distance_km": 8.4, "base_risk": 0.10, "line_id": "central_kasara"},
+        {"id": "central_kasara_TIT_KDV", "from": "TIT", "to": "KDV", "distance_km": 4.5, "base_risk": 0.15, "line_id": "central_kasara"},
+        {"id": "central_kasara_KDV_VSD", "from": "KDV", "to": "VSD", "distance_km": 6.9, "base_risk": 0.18, "line_id": "central_kasara"},
+        {"id": "central_kasara_VSD_ASO", "from": "VSD", "to": "ASO", "distance_km": 8.0, "base_risk": 0.20, "line_id": "central_kasara"},
+        {"id": "central_kasara_ASO_ATG", "from": "ASO", "to": "ATG", "distance_km": 4.6, "base_risk": 0.18, "line_id": "central_kasara"},
+        {"id": "central_kasara_ATG_KDI", "from": "ATG", "to": "KDI", "distance_km": 6.0, "base_risk": 0.20, "line_id": "central_kasara"},
+        {"id": "central_kasara_KDI_KSRA", "from": "KDI", "to": "KSRA", "distance_km": 5.5, "base_risk": 0.22, "line_id": "central_kasara"}
+      ]
+    },
+    {
+      "id": "central_karjat",
+      "name": "Central – Karjat Branch",
+      "color": "#A855F7",
+      "stations": [
+        {"order": 1, "code": "KYN", "name": "Kalyan Jn", "lat": 19.234716, "lon": 73.12974, "monsoon_risk": "medium", "platforms": 4, "diversion_platform": 3, "bus_bay_walk_m": 210},
+        {"order": 2, "code": "VLDI", "name": "Vithalwadi", "lat": 19.2075, "lon": 73.1447, "monsoon_risk": "low", "platforms": 2, "diversion_platform": 1, "bus_bay_walk_m": 150},
+        {"order": 3, "code": "ULNR", "name": "Ulhasnagar", "lat": 19.2215, "lon": 73.1645, "monsoon_risk": "medium", "platforms": 2, "diversion_platform": 2, "bus_bay_walk_m": 175},
+        {"order": 4, "code": "ABH", "name": "Ambernath", "lat": 19.1993, "lon": 73.1943, "monsoon_risk": "medium", "platforms": 2, "diversion_platform": 1, "bus_bay_walk_m": 190},
+        {"order": 5, "code": "BLP", "name": "Badlapur", "lat": 19.1554, "lon": 73.2354, "monsoon_risk": "medium", "platforms": 2, "diversion_platform": 2, "bus_bay_walk_m": 200},
+        {"order": 6, "code": "VP", "name": "Vangani", "lat": 19.0964, "lon": 73.2701, "monsoon_risk": "high", "platforms": 2, "diversion_platform": 1, "bus_bay_walk_m": 210},
+        {"order": 7, "code": "NRL", "name": "Neral", "lat": 19.0323, "lon": 73.3187, "monsoon_risk": "high", "platforms": 2, "diversion_platform": 2, "bus_bay_walk_m": 220},
+        {"order": 8, "code": "KJT", "name": "Karjat", "lat": 18.9107, "lon": 73.3238, "monsoon_risk": "high", "platforms": 3, "diversion_platform": 1, "bus_bay_walk_m": 240}
+      ],
+      "segments": [
+        {"id": "central_karjat_KYN_VLDI", "from": "KYN", "to": "VLDI", "distance_km": 3.5, "base_risk": 0.08, "line_id": "central_karjat"},
+        {"id": "central_karjat_VLDI_ULNR", "from": "VLDI", "to": "ULNR", "distance_km": 2.0, "base_risk": 0.08, "line_id": "central_karjat"},
+        {"id": "central_karjat_ULNR_ABH", "from": "ULNR", "to": "ABH", "distance_km": 3.5, "base_risk": 0.12, "line_id": "central_karjat"},
+        {"id": "central_karjat_ABH_BLP", "from": "ABH", "to": "BLP", "distance_km": 4.8, "base_risk": 0.15, "line_id": "central_karjat"},
+        {"id": "central_karjat_BLP_VP", "from": "BLP", "to": "VP", "distance_km": 6.5, "base_risk": 0.18, "line_id": "central_karjat"},
+        {"id": "central_karjat_VP_NRL", "from": "VP", "to": "NRL", "distance_km": 5.7, "base_risk": 0.20, "line_id": "central_karjat"},
+        {"id": "central_karjat_NRL_KJT", "from": "NRL", "to": "KJT", "distance_km": 12.5, "base_risk": 0.22, "line_id": "central_karjat"}
+      ]
+    },
+    {
+      "id": "harbour",
+      "name": "Harbour Line (CST ↔ Panvel)",
+      "color": "#FACC15",
+      "stations": [
+        {"order": 1, "code": "CSTM", "name": "Mumbai CST", "lat": 18.944481, "lon": 72.836903, "monsoon_risk": "low", "platforms": 4, "diversion_platform": 2, "bus_bay_walk_m": 145},
+        {"order": 2, "code": "CLA", "name": "Kurla Jn", "lat": 19.065221, "lon": 72.879375, "monsoon_risk": "high", "platforms": 4, "diversion_platform": 1, "bus_bay_walk_m": 220},
+        {"order": 3, "code": "CHM", "name": "Chembur", "lat": 19.0522, "lon": 72.8994, "monsoon_risk": "medium", "platforms": 2, "diversion_platform": 2, "bus_bay_walk_m": 180},
+        {"order": 4, "code": "GVI", "name": "Govandi", "lat": 19.0715, "lon": 72.9083, "monsoon_risk": "high", "platforms": 2, "diversion_platform": 1, "bus_bay_walk_m": 195},
+        {"order": 5, "code": "MKD", "name": "Mankhurd", "lat": 19.0509, "lon": 72.9333, "monsoon_risk": "high", "platforms": 2, "diversion_platform": 2, "bus_bay_walk_m": 205},
+        {"order": 6, "code": "VASH", "name": "Vashi", "lat": 19.0771, "lon": 72.9987, "monsoon_risk": "medium", "platforms": 3, "diversion_platform": 1, "bus_bay_walk_m": 220},
+        {"order": 7, "code": "NERL", "name": "Nerul", "lat": 19.0330, "lon": 73.0169, "monsoon_risk": "medium", "platforms": 2, "diversion_platform": 2, "bus_bay_walk_m": 210},
+        {"order": 8, "code": "BEL", "name": "CBD Belapur", "lat": 19.0154, "lon": 73.0330, "monsoon_risk": "low", "platforms": 2, "diversion_platform": 1, "bus_bay_walk_m": 190},
+        {"order": 9, "code": "PNVL", "name": "Panvel", "lat": 18.9894, "lon": 73.1175, "monsoon_risk": "medium", "platforms": 4, "diversion_platform": 3, "bus_bay_walk_m": 230}
+      ],
+      "segments": [
+        {"id": "harbour_CSTM_CLA", "from": "CSTM", "to": "CLA", "distance_km": 16.0, "base_risk": 0.12, "line_id": "harbour"},
+        {"id": "harbour_CLA_CHM", "from": "CLA", "to": "CHM", "distance_km": 5.0, "base_risk": 0.12, "line_id": "harbour"},
+        {"id": "harbour_CHM_GVI", "from": "CHM", "to": "GVI", "distance_km": 2.0, "base_risk": 0.15, "line_id": "harbour"},
+        {"id": "harbour_GVI_MKD", "from": "GVI", "to": "MKD", "distance_km": 2.5, "base_risk": 0.18, "line_id": "harbour"},
+        {"id": "harbour_MKD_VASH", "from": "MKD", "to": "VASH", "distance_km": 6.0, "base_risk": 0.15, "line_id": "harbour"},
+        {"id": "harbour_VASH_NERL", "from": "VASH", "to": "NERL", "distance_km": 3.0, "base_risk": 0.10, "line_id": "harbour"},
+        {"id": "harbour_NERL_BEL", "from": "NERL", "to": "BEL", "distance_km": 2.0, "base_risk": 0.08, "line_id": "harbour"},
+        {"id": "harbour_BEL_PNVL", "from": "BEL", "to": "PNVL", "distance_km": 11.0, "base_risk": 0.12, "line_id": "harbour"}
+      ]
+    },
+    {
+      "id": "western",
+      "name": "Western Line (Churchgate ↔ Virar)",
+      "color": "#EC4899",
+      "stations": [
+        {"order": 1, "code": "CCG", "name": "Churchgate", "lat": 18.9322, "lon": 72.8264, "monsoon_risk": "low", "platforms": 4, "diversion_platform": 2, "bus_bay_walk_m": 140},
+        {"order": 2, "code": "BCT", "name": "Mumbai Central", "lat": 18.9696, "lon": 72.8194, "monsoon_risk": "medium", "platforms": 3, "diversion_platform": 1, "bus_bay_walk_m": 165},
+        {"order": 3, "code": "DDR", "name": "Dadar (Western)", "lat": 19.0189, "lon": 72.8424, "monsoon_risk": "high", "platforms": 3, "diversion_platform": 2, "bus_bay_walk_m": 190},
+        {"order": 4, "code": "BA", "name": "Bandra", "lat": 19.0544, "lon": 72.8406, "monsoon_risk": "high", "platforms": 3, "diversion_platform": 1, "bus_bay_walk_m": 205},
+        {"order": 5, "code": "ADH", "name": "Andheri", "lat": 19.1197, "lon": 72.8468, "monsoon_risk": "high", "platforms": 4, "diversion_platform": 2, "bus_bay_walk_m": 225},
+        {"order": 6, "code": "BVI", "name": "Borivali", "lat": 19.2288, "lon": 72.8567, "monsoon_risk": "medium", "platforms": 4, "diversion_platform": 1, "bus_bay_walk_m": 235},
+        {"order": 7, "code": "BSR", "name": "Vasai Road", "lat": 19.3919, "lon": 72.8397, "monsoon_risk": "medium", "platforms": 3, "diversion_platform": 2, "bus_bay_walk_m": 210},
+        {"order": 8, "code": "VR", "name": "Virar", "lat": 19.4559, "lon": 72.8107, "monsoon_risk": "medium", "platforms": 4, "diversion_platform": 1, "bus_bay_walk_m": 220}
+      ],
+      "segments": [
+        {"id": "western_CCG_BCT", "from": "CCG", "to": "BCT", "distance_km": 4.0, "base_risk": 0.08, "line_id": "western"},
+        {"id": "western_BCT_DDR", "from": "BCT", "to": "DDR", "distance_km": 4.0, "base_risk": 0.15, "line_id": "western"},
+        {"id": "western_DDR_BA", "from": "DDR", "to": "BA", "distance_km": 5.0, "base_risk": 0.15, "line_id": "western"},
+        {"id": "western_BA_ADH", "from": "BA", "to": "ADH", "distance_km": 7.0, "base_risk": 0.15, "line_id": "western"},
+        {"id": "western_ADH_BVI", "from": "ADH", "to": "BVI", "distance_km": 12.0, "base_risk": 0.12, "line_id": "western"},
+        {"id": "western_BVI_BSR", "from": "BVI", "to": "BSR", "distance_km": 20.0, "base_risk": 0.10, "line_id": "western"},
+        {"id": "western_BSR_VR", "from": "BSR", "to": "VR", "distance_km": 7.0, "base_risk": 0.10, "line_id": "western"}
+      ]
+    }
+  ]
+}

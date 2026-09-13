@@ -4,6 +4,7 @@ import UserDashboard from "../pages/UserDashboard";
 import ScenarioControlPage from "../pages/ScenarioControlPage";
 import DecisionLogPage from "../pages/DecisionLogPage";
 import ReviewQueuePage from "../pages/ReviewQueuePage";
+import UserComplaintsPage from "../pages/UserComplaintsPage";
 import LoginPage from "../pages/LoginPage";
 import SignupPage from "../pages/SignupPage";
 import RequireRole from "./RequireRole";
@@ -17,6 +18,7 @@ export default function AppRoutes() {
       <Route path="/admin" element={<RequireRole role="operator"><AdminDashboard /></RequireRole>} />
       <Route path="/admin/review" element={<RequireRole role="operator"><ReviewQueuePage /></RequireRole>} />
       <Route path="/admin/scenario" element={<RequireRole role="operator"><ScenarioControlPage /></RequireRole>} />
+      <Route path="/admin/complaints" element={<RequireRole role="operator"><UserComplaintsPage /></RequireRole>} />
       <Route path="/admin/decisions" element={<RequireRole role="operator"><DecisionLogPage /></RequireRole>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

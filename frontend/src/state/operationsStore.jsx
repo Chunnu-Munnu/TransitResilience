@@ -18,6 +18,7 @@ const initialState = {
   lastEvent: null,
   connectionStatus: "connecting",
   manualEvents: [],
+  complaints: [],
 };
 
 function upsertByKey(list, item, key) {
@@ -44,6 +45,7 @@ function reducer(state, action) {
             trains: payload.trains ?? state.trains,
             hazards: payload.segments ?? state.hazards,
             manualEvents: payload.manual_events ?? state.manualEvents,
+            complaints: payload.complaints ?? state.complaints,
             recommendations: payload.recommendations ?? state.recommendations,
             metrics: payload.metrics ?? state.metrics,
             simulationTime: payload.clock_min ?? state.simulationTime,
